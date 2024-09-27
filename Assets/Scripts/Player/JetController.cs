@@ -61,25 +61,43 @@ public class JetController : MonoBehaviour
 
 
     private void Move() { 
-        float targetSpeed = _input.sprint ? SprintSpeed : MoveSpeed;
+        float targetSpeed = MoveSpeed;
+    
+        if (_input.sprint) {
+            targetSpeed = SprintSpeed;
+            _mainCamera.GetComponent<CustomPostProcessing>().enabled = true;
+            _mainCamera.GetComponent<Camera>().fieldOfView = Mathf.Lerp(_mainCamera.GetComponent<Camera>().fieldOfView, 90, Time.deltaTime * 10);
+            
+            // Hạ thấp camera dần xuống 1,5 đơn vị
+            Vector3 targetPosition = _mainCamera.transform.localPosition;
+            targetPosition.y = Mathf.Lerp(_mainCamera.transform.localPosition.y, 1.5f, Time.deltaTime * 10);
+            _mainCamera.transform.localPosition = targetPosition;
+        } else {
+            _mainCamera.GetComponent<CustomPostProcessing>().enabled = false;
+            _mainCamera.GetComponent<Camera>().fieldOfView = Mathf.Lerp(_mainCamera.GetComponent<Camera>().fieldOfView, 65, Time.deltaTime * 10);
+            
+            // Giữ nguyên vị trí camera, không tăng dần về 3 đơn vị
+            Vector3 targetPosition = _mainCamera.transform.localPosition;
+            targetPosition.y = Mathf.Lerp(_mainCamera.transform.localPosition.y, 3f, Time.deltaTime * 10);
+            _mainCamera.transform.localPosition = targetPosition;
+        }
         
-        Vector3 moveInput =  new Vector3(Input.GetAxisRaw("Horizontal")*2,Input.GetAxisRaw("Vertical")*0.5f , 1);
-
+        Vector3 moveInput = new Vector3(Input.GetAxisRaw("Horizontal") * 2, Input.GetAxisRaw("Vertical") * 0.5f, 1);
+    
         RotationJetWithMovement();
-
-        _targetRotation =  _mainCamera.transform.eulerAngles.y;
+    
+        _targetRotation = _mainCamera.transform.eulerAngles.y;
         
         float smoothYTiltAngle = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity, RotationSmoothTime);
         float smoothZTiltAngle = Mathf.SmoothDampAngle(transform.eulerAngles.z, -currentZTiltAngle, ref _zRotationVelocity, RotationSmoothTime);
         float smoothXTiltAngle = Mathf.SmoothDampAngle(transform.eulerAngles.x, currentXTiltAngle, ref _xRotationVelocity, RotationSmoothTime);
-
+    
         transform.rotation = Quaternion.Euler(smoothXTiltAngle, smoothYTiltAngle, smoothZTiltAngle);
         SynchronizeWithRotation.Matrix = Matrix4x4.Rotate(Quaternion.Euler(0, smoothYTiltAngle, 0));
         
-
         _rigibody.velocity = moveInput.normalized.Synchronize() * targetSpeed;
         
-        Debug.Log(_rigibody.velocity.x)  ;
+        Debug.Log(_rigibody.velocity.x);
     }
 
     private void RotationJetWithMovement(){
