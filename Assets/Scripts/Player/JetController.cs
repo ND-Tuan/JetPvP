@@ -4,6 +4,7 @@ using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using Photon.Pun;
+using UnityEngine.Rendering.PostProcessing;
 
 public class JetController : MonoBehaviour
 {
@@ -14,8 +15,6 @@ public class JetController : MonoBehaviour
     [Range(0.0f, 1.2f)]
     public float RotationSmoothTime = 0.12f;
     public float SpeedChangeRate = 10.0f;
-    public GameObject CinemachineCameraTarget;
-    public GameObject BackCam;
     public float TopClamp = 70.0f;
     public float BottomClamp = -30.0f;
     public float CameraAngleOverride = 0.0f;
@@ -45,11 +44,11 @@ public class JetController : MonoBehaviour
     private PhotonView _photonView;
 
      void Start(){
-        _cinemachineTargetYaw = CinemachineCameraTarget.transform.rotation.eulerAngles.y;
         _rigibody = GetComponent<Rigidbody>();
 
         _input = GetComponent<StarterAssetsInputs>();
         _photonView = GetComponentInParent<PhotonView>();
+        _animator = GetComponent<Animator>();
     }
 
     private void Awake(){
@@ -65,33 +64,43 @@ public class JetController : MonoBehaviour
     
         if (_input.sprint) {
             targetSpeed = SprintSpeed;
+            
+            //Tạo hiệu ứng tăng tốc
             _mainCamera.GetComponent<CustomPostProcessing>().enabled = true;
-            _mainCamera.GetComponent<Camera>().fieldOfView = Mathf.Lerp(_mainCamera.GetComponent<Camera>().fieldOfView, 90, Time.deltaTime * 10);
+            _mainCamera.GetComponent<Camera>().fieldOfView = Mathf.Lerp(_mainCamera.GetComponent<Camera>().fieldOfView, 100, Time.deltaTime * 10);
+            _mainCamera.GetComponent<PostProcessLayer>().enabled = true;
+            
             
             // Hạ thấp camera dần xuống 1,5 đơn vị
             Vector3 targetPosition = _mainCamera.transform.localPosition;
-            targetPosition.y = Mathf.Lerp(_mainCamera.transform.localPosition.y, 1.5f, Time.deltaTime * 10);
-            _mainCamera.transform.localPosition = targetPosition;
+            targetPosition.y = Mathf.Lerp(_mainCamera.transform.localPosition.y, 0.8f, Time.deltaTime * 10);
+            _mainCamera.transform.localPosition = targetPosition + GetCameraShakeOffset();
+
         } else {
+
+            //bỏ hiệu ứng
             _mainCamera.GetComponent<CustomPostProcessing>().enabled = false;
-            _mainCamera.GetComponent<Camera>().fieldOfView = Mathf.Lerp(_mainCamera.GetComponent<Camera>().fieldOfView, 65, Time.deltaTime * 10);
+            _mainCamera.GetComponent<Camera>().fieldOfView = Mathf.Lerp(_mainCamera.GetComponent<Camera>().fieldOfView, 75, Time.deltaTime * 10);
+            _mainCamera.GetComponent<PostProcessLayer>().enabled = false;
             
             // Giữ nguyên vị trí camera, không tăng dần về 3 đơn vị
-            Vector3 targetPosition = _mainCamera.transform.localPosition;
+            Vector3 targetPosition = new(0,_mainCamera.transform.localPosition.y,-15);
             targetPosition.y = Mathf.Lerp(_mainCamera.transform.localPosition.y, 3f, Time.deltaTime * 10);
             _mainCamera.transform.localPosition = targetPosition;
         }
         
-        Vector3 moveInput = new Vector3(Input.GetAxisRaw("Horizontal") * 2, Input.GetAxisRaw("Vertical") * 0.5f, 1);
+        Vector3 moveInput = new Vector3(Input.GetAxisRaw("Horizontal") * 2, Input.GetAxisRaw("Vertical") * 0.8f, 1);
     
         RotationJetWithMovement();
     
         _targetRotation = _mainCamera.transform.eulerAngles.y;
         
+        // Xử lý nghiêng máy bay theo hướng di chuyển
         float smoothYTiltAngle = Mathf.SmoothDampAngle(transform.eulerAngles.y, _targetRotation, ref _rotationVelocity, RotationSmoothTime);
         float smoothZTiltAngle = Mathf.SmoothDampAngle(transform.eulerAngles.z, -currentZTiltAngle, ref _zRotationVelocity, RotationSmoothTime);
         float smoothXTiltAngle = Mathf.SmoothDampAngle(transform.eulerAngles.x, currentXTiltAngle, ref _xRotationVelocity, RotationSmoothTime);
-    
+
+        // Gán góc nghiêng cho máy bay
         transform.rotation = Quaternion.Euler(smoothXTiltAngle, smoothYTiltAngle, smoothZTiltAngle);
         SynchronizeWithRotation.Matrix = Matrix4x4.Rotate(Quaternion.Euler(0, smoothYTiltAngle, 0));
         
@@ -99,7 +108,9 @@ public class JetController : MonoBehaviour
         
         Debug.Log(_rigibody.velocity.x);
     }
+    
 
+    // Hàm xử lý nghiêng máy bay theo hướng di chuyển
     private void RotationJetWithMovement(){
         float targetZTiltAngle = 0f;
         float targetXTiltAngle = 0f;
@@ -111,18 +122,28 @@ public class JetController : MonoBehaviour
 
         // Kiểm tra đầu vào từ bàn phím
         if (_input.move.x != 0){
-            targetZTiltAngle = -(45*Mathf.Sign(_input.move.x));
+            targetZTiltAngle = 45*Mathf.Sign(_input.move.x);
         }
 
         if (_input.move.y != 0){
-            targetXTiltAngle = -30*Mathf.Sign(_input.move.y);
+            targetXTiltAngle = -18*Mathf.Sign(_input.move.y);
         }
         
         // Nghiêng máy bay dần dần về góc nghiêng mục tiêu
-        currentZTiltAngle = Mathf.Lerp(currentZTiltAngle, targetZTiltAngle, Time.deltaTime *1000000000000);
-        currentXTiltAngle = Mathf.Lerp(currentXTiltAngle, targetXTiltAngle, Time.deltaTime*1000);
+        currentZTiltAngle = Mathf.Lerp(currentZTiltAngle, targetZTiltAngle, Time.deltaTime *20);
+        currentXTiltAngle = Mathf.Lerp(currentXTiltAngle, targetXTiltAngle, Time.deltaTime*20);
     }
 
+
+    private Vector3 GetCameraShakeOffset()
+{
+    float shakeAmount = 0.05f; // Độ rung của camera
+    return new Vector3(
+        Random.Range(-shakeAmount, shakeAmount),
+        Random.Range(-shakeAmount, shakeAmount),
+        Random.Range(-shakeAmount, shakeAmount)
+    );
+}
 
     private static float ClampAngle(float lfAngle, float lfMin, float lfMax){
         if (lfAngle < -360f) lfAngle += 360f;

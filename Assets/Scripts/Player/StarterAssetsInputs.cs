@@ -85,5 +85,20 @@ using UnityEngine.InputSystem;
 		{
 			Cursor.lockState = newState ? CursorLockMode.Locked : CursorLockMode.None;
 		}
+
+		// Phương thức mới để xử lý sự kiện Alt
+		private void Update()
+		{
+			if (Input.GetKeyDown(KeyCode.LeftAlt))
+			{
+				ToggleCursorVisibility();
+			}
+		}
+
+		private void ToggleCursorVisibility()
+		{
+			Cursor.visible = !Cursor.visible;
+			Cursor.lockState = Cursor.visible ? CursorLockMode.None : CursorLockMode.Locked;
+		}
 	}
 	
