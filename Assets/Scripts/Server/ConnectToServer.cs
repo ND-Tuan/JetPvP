@@ -4,13 +4,20 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Photon.Pun;
+using UnityEngine.UI;
 
 public class ConnectToServer : MonoBehaviourPunCallbacks
 {
-    void Start()
-    {
+    [SerializeField] private InputField _playerNameInputField;
+    [SerializeField] private GameObject _InputPanel;
+    [SerializeField] private GameObject _ConnectingPanel;
+    public void LogToGame(){
+        _InputPanel.SetActive(false);
+        _ConnectingPanel.SetActive(true);
+
         //connect to the photon server
-        Debug.Log("Connecting to the photon server");
+        PhotonNetwork.LocalPlayer.NickName = _playerNameInputField.text;
+        PhotonNetwork.AutomaticallySyncScene = true;
         PhotonNetwork.ConnectUsingSettings();
 
     }

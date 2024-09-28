@@ -17,6 +17,8 @@ public class MouseLook : MonoBehaviour
     public GameObject characterBody;
     public GameObject Follower;
 
+    [SerializeField] bool canRotate = true;
+
     private Vector2 targetDirection;
     private Vector2 targetCharacterDirection;
 
@@ -61,6 +63,12 @@ public class MouseLook : MonoBehaviour
         else
             gameObject.SetActive(false);
 
+        if (Follower)
+        {
+            transform.position = Follower.transform.position;
+            if(!canRotate)
+                return;
+        }
 
         // Allow the script to clamp based on a desired target value.
         var targetOrientation = Quaternion.Euler(targetDirection);

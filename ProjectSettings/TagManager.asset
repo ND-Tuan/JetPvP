@@ -3,7 +3,8 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - FxTemporaire
   layers:
   - Default
   - TransparentFX
@@ -11,11 +12,11 @@ TagManager:
   - Effect
   - Water
   - UI
+  - MiniMap
   - 
-  - 
-  - 
-  - 
-  - 
+  - Cloud1
+  - Cloud2
+  - Cloud3
   - 
   - 
   - 

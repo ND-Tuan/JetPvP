@@ -8,7 +8,7 @@ public class SpawnPlayers : MonoBehaviour
 
     private void Start()
     {
-        Vector3 randomPosition = new(Random.Range(-500, 500),100, Random.Range(-500, 500));
+        Vector3 randomPosition = new(Random.Range(-50, 50),10, Random.Range(-50, 50));
         PhotonNetwork.Instantiate(playerPrefab.name, randomPosition, Quaternion.identity);
     }
 }
