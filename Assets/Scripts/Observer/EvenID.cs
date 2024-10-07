@@ -2,9 +2,7 @@
 
 public enum EvenID 
 {
-   
-    
-    
-    //Audio
+    DisplayHp,
+    UpdateHp
 
 }

@@ -1,10 +1,7 @@
 ﻿using UnityEngine;
-using Photon.Pun;
 
 public class MouseLook : MonoBehaviour
 {
-    public static MouseLook instance;
-
     [Header("Settings")]
     public Vector2 clampInDegrees = new Vector2(360, 180);
     public bool lockCursor = true;
@@ -29,14 +26,10 @@ public class MouseLook : MonoBehaviour
 
     [HideInInspector]
     public bool scoped;
-    private PhotonView _photonView;
+    private Player player;
 
     void Start()
     {
-        instance = this;
-
-        _photonView = GetComponentInParent<PhotonView>();
-
         // Set target direction to the camera's initial orientation.
         targetDirection = transform.localRotation.eulerAngles;
 
@@ -46,6 +39,14 @@ public class MouseLook : MonoBehaviour
         
         if (lockCursor)
             LockCursor();
+
+        player = GetComponentInParent<Player>();
+        if(!player.HasInputAuthority){
+            gameObject.SetActive(false);
+            return;
+        }
+
+        this.transform.SetParent(null);
 
     }
 
@@ -57,11 +58,9 @@ public class MouseLook : MonoBehaviour
     }
 
     void Update()
-    {      
-        if(_photonView.IsMine)
-            gameObject.SetActive(true);
-        else
-            gameObject.SetActive(false);
+    {     
+        
+        
 
         if (Follower)
         {
@@ -70,48 +69,39 @@ public class MouseLook : MonoBehaviour
                 return;
         }
 
-        // Allow the script to clamp based on a desired target value.
-        var targetOrientation = Quaternion.Euler(targetDirection);
+       var targetOrientation = Quaternion.Euler(targetDirection);
         var targetCharacterOrientation = Quaternion.Euler(targetCharacterDirection);
-
-        // Get raw mouse input for a cleaner reading on more sensitive mice.
+        
+        // Lấy giá trị thay đổi của chuột
         mouseDelta = new Vector2(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y"));
-
-        // Scale input against the sensitivity setting and multiply that against the smoothing value.
         mouseDelta = Vector2.Scale(mouseDelta, new Vector2(sensitivity.x * smoothing.x, sensitivity.y * smoothing.y));
-
-        // Interpolate mouse movement over time to apply smoothing delta.
+        
+        // Làm mượt chuyển động của chuột
         _smoothMouse.x = Mathf.Lerp(_smoothMouse.x, mouseDelta.x, 1f / smoothing.x);
         _smoothMouse.y = Mathf.Lerp(_smoothMouse.y, mouseDelta.y, 1f / smoothing.y);
-
-        // Find the absolute mouse movement value from point zero.
+        
+        // Cộng dồn giá trị chuột đã làm mượt
         _mouseAbsolute += _smoothMouse;
-
-        // Clamp and apply the local x value first, so as not to be affected by world transforms.
+        
+        // Giới hạn góc quay theo trục x nếu cần
         if (clampInDegrees.x < 360)
             _mouseAbsolute.x = Mathf.Clamp(_mouseAbsolute.x, -clampInDegrees.x * 0.5f, clampInDegrees.x * 0.5f);
-
-        // Then clamp and apply the global y value.
+        
+        // Giới hạn góc quay theo trục y nếu cần
         if (clampInDegrees.y < 360)
             _mouseAbsolute.y = Mathf.Clamp(_mouseAbsolute.y, -clampInDegrees.y * 0.5f, clampInDegrees.y * 0.5f);
-
+        
+        // Cập nhật góc quay của đối tượng theo trục y
         transform.localRotation = Quaternion.AngleAxis(-_mouseAbsolute.y, targetOrientation * Vector3.right) * targetOrientation;
-
-        // If there's a character body that acts as a parent to the camera
-        if (characterBody)
-        {
+        
+        if (characterBody){
+            // Cập nhật góc quay của thân nhân vật theo trục x
             var yRotation = Quaternion.AngleAxis(_mouseAbsolute.x, Vector3.up);
             characterBody.transform.localRotation = yRotation * targetCharacterOrientation;
-        }
-        else
-        {
+        } else {
+            // Cập nhật góc quay của đối tượng theo trục x
             var yRotation = Quaternion.AngleAxis(_mouseAbsolute.x, transform.InverseTransformDirection(Vector3.up));
             transform.localRotation *= yRotation;
-        }
-
-        if (Follower)
-        {
-            transform.position = Follower.transform.position;
         }
     }
 }

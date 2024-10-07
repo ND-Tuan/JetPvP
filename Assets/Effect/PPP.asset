@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: PPP
   m_EditorClassIdentifier: 
   settings:
-  - {fileID: 5622393845418112467}
---- !u!114 &5622393845418112467
+  - {fileID: 1109736720144944354}
+--- !u!114 &1109736720144944354
 MonoBehaviour:
   m_ObjectHideFlags: 3
   m_CorrespondingSourceObject: {fileID: 0}
@@ -31,8 +31,8 @@ MonoBehaviour:
     overrideState: 1
     value: 1
   shutterAngle:
-    overrideState: 1
-    value: 150
+    overrideState: 0
+    value: 270
   sampleCount:
-    overrideState: 1
+    overrideState: 0
     value: 10

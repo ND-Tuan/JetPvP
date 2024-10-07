@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Photon.Pun;
 using UnityEngine;
 
 public class Attacker : MonoBehaviour
@@ -13,21 +12,19 @@ public class Attacker : MonoBehaviour
     [SerializeField] private float _lerpSpeed = 5f; // Tốc độ chuyển hướng
     [SerializeField] private Transform _FirePoint;
     [SerializeField] GameObject _MuzzleFlash;
-    private PhotonView _photonView;
- 
+
     private float _nextTimeToFire = 0f;
     private Vector3 _currentDirection;
 
     void Start()
     {
         _currentDirection = _FirePoint.forward;
-        _photonView = GetComponentInParent<PhotonView>();
+    
         
     }
 
     void Update()
     {   
-        if(!_photonView.IsMine) return;
         if(!_fireRate.IsCoolingDown && Input.GetMouseButton(0)){
             Shoot();
         }
@@ -57,10 +54,10 @@ public class Attacker : MonoBehaviour
 
             if(hit.transform.tag != "Player") return;
             
-            JetController enemy = hit.transform.GetComponent<JetController>();
+            Player enemy = hit.transform.GetComponent<Player>();
             if (enemy == null) return;
 
-            enemy.TakeDamage(_damage);    
+            //enemy.TakeDamage(_damage);    
         }
 
         _fireRate.StartCooldown();

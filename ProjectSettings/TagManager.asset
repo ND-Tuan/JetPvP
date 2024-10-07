@@ -4,20 +4,20 @@
 TagManager:
   serializedVersion: 2
   tags:
-  - FxTemporaire
+  - CinemachineTarget
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - Effect
+  - Player
   - Water
   - UI
+  - Map
   - MiniMap
-  - 
   - Cloud1
   - Cloud2
   - Cloud3
-  - 
+  - Effect
   - 
   - 
   - 
