@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 2382109156329011261}
   - component: {fileID: 217005925201609585}
   - component: {fileID: 2529394852886910976}
+  - component: {fileID: 4767660894922615936}
   m_Layer: 0
   m_Name: Runner
   m_TagString: Untagged
@@ -130,3 +131,17 @@ MonoBehaviour:
   BVHDepth: 0
   BVHNodes: 0
   TotalHitboxes: 0
+--- !u!114 &4767660894922615936
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1690047586891269497}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 164fd84fd9b7426480f846901a304e86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  DelayIfSceneManagerIsBusy: 1
+  _pool: {fileID: 0}

@@ -1,0 +1,19 @@
+"filename", "language", "C#", "comment", "blank", "total"
+"e:\Unity Projects\Project\My project\Assets\Scripts\Combine.cs", "C#", 35, 9, 15, 59
+"e:\Unity Projects\Project\My project\Assets\Scripts\Cooldown.cs", "C#", 16, 0, 7, 23
+"e:\Unity Projects\Project\My project\Assets\Scripts\GameController\GameManager.cs", "C#", 20, 3, 5, 28
+"e:\Unity Projects\Project\My project\Assets\Scripts\GameController\ObjectPoolManager.cs", "C#", 78, 5, 10, 93
+"e:\Unity Projects\Project\My project\Assets\Scripts\Observer\EvenID.cs", "C#", 5, 0, 4, 9
+"e:\Unity Projects\Project\My project\Assets\Scripts\Observer\Observer.cs", "C#", 35, 0, 8, 43
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\Attacker.cs", "C#", 53, 4, 21, 78
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\KeepOriginRotation.cs", "C#", 17, 1, 5, 23
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\MouseLook.cs", "C#", 70, 11, 27, 108
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\Player.cs", "C#", 147, 10, 54, 211
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\PlayerInput.cs", "C#", 48, 10, 15, 73
+"e:\Unity Projects\Project\My project\Assets\Scripts\RenderFeatureToggler.cs", "C#", 15, 0, 4, 19
+"e:\Unity Projects\Project\My project\Assets\Scripts\UIController\HpBarDisplay.cs", "C#", 33, 0, 9, 42
+"e:\Unity Projects\Project\My project\Assets\Scripts\UIController\NewBehaviourScript.cs", "C#", 12, 2, 5, 19
+"e:\Unity Projects\Project\My project\Assets\Scripts\UIController\PlayerHub.cs", "C#", 24, 7, 16, 47
+"e:\Unity Projects\Project\My project\Assets\Scripts\UIController\UIGameMenu.cs", "C#", 124, 13, 33, 170
+"e:\Unity Projects\Project\My project\Assets\Scripts\UIController\UINameplate.cs", "C#", 23, 4, 6, 33
+"Total", "-", 755, 79, 244, 1078

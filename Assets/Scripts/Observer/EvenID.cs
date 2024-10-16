@@ -3,6 +3,7 @@
 public enum EvenID 
 {
     DisplayHp,
-    UpdateHp
+    UpdateHp,
+    UpdatePlayerList
 
 }

@@ -16,6 +16,8 @@ namespace Multiplayer
 		public bool SpeedUpEffect;
 		public bool IsRotateX;
 		public bool IsRotateY;
+
+		public bool Fire;
 	}
 
 	/// <summary>
@@ -33,6 +35,7 @@ namespace Multiplayer
 			_input.Jump = false;
 			_input.Sprint = false;
 			_input.HightValue = 0;
+			_input.Fire = false;
 		}
 
 		private void Update()
@@ -59,7 +62,11 @@ namespace Multiplayer
 			
 			_input.Sprint = Input.GetMouseButton(1);
 
-			_input.SpeedUpEffect = _input.Sprint;
+			if(Input.GetMouseButtonDown(1)) _input.SpeedUpEffect = true;
+			if(Input.GetMouseButtonUp(1)) _input.SpeedUpEffect = false;
+
+
+			_input.Fire = Input.GetMouseButton(0);
 
 		}
 

@@ -1,77 +1,47 @@
 using System.Collections;
 using System.Collections.Generic;
+using Fusion;
+using Multiplayer;
 using UnityEngine;
 
-public class Attacker : MonoBehaviour
+public class Attacker : NetworkBehaviour, IAttack
 {
     [SerializeField] private int _damage = 10;
-    [SerializeField] private float _range = 100f;
-    [SerializeField] private Cooldown _fireRate;
+    [SerializeField] private GameObject _bulletPrefab;
+    [SerializeField] private Transform _FirePos;
+    [SerializeField] private Cooldown _cooldown;
 
-    [SerializeField] private float _maxAngleDifference = 30f; // Góc lệch tối đa cho phép
-    [SerializeField] private float _lerpSpeed = 5f; // Tốc độ chuyển hướng
-    [SerializeField] private Transform _FirePoint;
-    [SerializeField] GameObject _MuzzleFlash;
 
-    private float _nextTimeToFire = 0f;
-    private Vector3 _currentDirection;
+    public Vector3 _currentDirection = default;
+    [Networked] private Angle angleY { get; set; }
+    [Networked] private Angle angleX { get; set; }
+    private Weapon _weapon;
 
-    void Start()
-    {
-        _currentDirection = _FirePoint.forward;
     
-        
-    }
-
-    void Update()
-    {   
-        if(!_fireRate.IsCoolingDown && Input.GetMouseButton(0)){
-            Shoot();
-        }
-        
-    }
-
-    private void Shoot()
-    {   
-        _MuzzleFlash.SetActive(true);
-
-        Ray screenRay = Camera.main.ScreenPointToRay(new Vector3(Screen.width / 2, Screen.height / 2));
-        Vector3 targetDirection = screenRay.direction;
-
-        // Tính góc giữa hướng từ FirePoint và hướng từ tâm màn hình
-        float angleDifference = Vector3.Angle(_FirePoint.forward, targetDirection);
-
-        // Nếu góc lệch quá lớn, bắn thẳng từ FirePoint
-        if (angleDifference > _maxAngleDifference){
-            targetDirection = _FirePoint.forward;
-        }
-
-        // Chuyển hướng từ từ
-        _currentDirection = Vector3.Lerp(_currentDirection, targetDirection, Time.deltaTime * _lerpSpeed);
-
-        RaycastHit hit;
-        if (Physics.Raycast(_FirePoint.position, _currentDirection, out hit, _range)){
-
-            if(hit.transform.tag != "Player") return;
-            
-            Player enemy = hit.transform.GetComponent<Player>();
-            if (enemy == null) return;
-
-            //enemy.TakeDamage(_damage);    
-        }
-
-        _fireRate.StartCooldown();
-        Invoke(nameof(DeAcetivateMuzzleFlash), 0.1f);
-    }
-
-    private void DeAcetivateMuzzleFlash()
+    public override void Spawned()
     {
-        _MuzzleFlash.SetActive(false);
+        _currentDirection = transform.forward;
+        _weapon = GetComponent<Weapon>();
     }
 
-    private void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawRay(_FirePoint.position, _currentDirection * _range);
+   
+    public void SetRotation(Vector3 Diraction){
+        RPC_Rotation(Diraction);
     }
+
+    public void Attack(Team team)
+    {
+        if(_cooldown.IsCoolingDown) return;
+        _weapon.Fire(Runner,Object.InputAuthority,transform.forward);
+        _cooldown.StartCooldown();
+
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    private void RPC_Rotation(Vector3 Diraction)
+    {
+        transform.forward = Diraction;
+    }
+
+    
 }
