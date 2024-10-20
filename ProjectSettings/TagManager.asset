@@ -7,6 +7,8 @@ TagManager:
   - CinemachineTarget
   - Bullet
   - RedFlag
+  - PlayerHUB
+  - BlueFlag
   layers:
   - Default
   - TransparentFX

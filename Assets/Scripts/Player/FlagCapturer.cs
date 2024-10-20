@@ -20,13 +20,13 @@ public class FlagCapturer : MonoBehaviour
        OpponentFlag = check? RedFlag : BlueFlag;
     }
 
-    void OnTriggerEnter(Collider other)
-    {
-        if(other.CompareTag(_flagtag)){
-            other.GetComponent<Flag>().Captured();
-            OpponentFlag.SetActive(true);
-        }
-    }
+    // void OnTriggerEnter(Collider other)
+    // {
+    //     if(other.CompareTag(_flagtag)){
+    //         other.GetComponent<Flag>().Captured();
+    //         OpponentFlag.SetActive(true);
+    //     }
+    // }
 
     public void DropFlag(){
         OpponentFlag.SetActive(false);

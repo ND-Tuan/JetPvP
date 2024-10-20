@@ -52,7 +52,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 72
   _range: 100
-  _areaRadius: 0.5
+  _areaRadius: 1.13
   _areaDamage: 0
   _timeToLive: 2
   _isHitScan: 0

@@ -23,6 +23,7 @@ namespace Starter
 		public bool ForceSinglePlayer;
 
 		[Header("UI Setup")]
+		public GameObject BackGround;
 		public CanvasGroup PanelGroup;
 		public TMP_InputField RoomText;
 		public TMP_InputField NicknameText;
@@ -68,6 +69,8 @@ namespace Starter
 			{
 				StatusText.text = "";
 				PanelGroup.gameObject.SetActive(false);
+				BackGround.SetActive(false);
+				
 			}
 			else
 			{
@@ -130,6 +133,7 @@ namespace Starter
 			}
 			else
 			{
+				if(GameManager.Instance.State == GameState.Waiting) return;
 				Cursor.lockState = CursorLockMode.Locked;
 				Cursor.visible = false;
 			}

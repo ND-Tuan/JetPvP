@@ -1,11 +1,7 @@
 ﻿using System.Diagnostics;
 using UnityEngine;
 
-namespace Starter
-{
-	/// <summary>
-	/// Simple component that rotates object. Used for Coins.
-	/// </summary>
+
 	public class RotateObject : MonoBehaviour
 	{	public enum RotationAxis
 		{
@@ -47,4 +43,3 @@ namespace Starter
 			transform.Rotate(value* Xindex, value* Yindex, value* Zindex);
 		}
 	}
-}

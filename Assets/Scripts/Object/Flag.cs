@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Starter;
 using UnityEngine;
 
 public class Flag : MonoBehaviour
@@ -8,7 +7,7 @@ public class Flag : MonoBehaviour
     [SerializeField] private GameObject _flag;
     private RotateObject[] rotateObjects;
 
-    void Start()
+    void Awake()
     {
         rotateObjects = GetComponentsInChildren<RotateObject>();
     }

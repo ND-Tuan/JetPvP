@@ -37,8 +37,12 @@ public sealed class Player : NetworkBehaviour
     
     [SerializeField] private int _MaxHealth = 100;
     [Networked] public Stage stage { get; set; }
+    [Networked, OnChangedRender(nameof(OnChangeTeam))]
+    public Team MyTeam { get; set; }
+    public bool IsReady ;
+    
 	private int _currentHealth;
-    public Team MyTeam;
+    
     public enum Stage{
 		New,
 		TeleportOut,
@@ -65,7 +69,7 @@ public sealed class Player : NetworkBehaviour
     [Header("Visual")]
     private Animator _animator;
     private PlayerHub _playerHub;
-    public HpBarDisplay _HpDisplay {private get; set;}
+    [Networked] public HpBarDisplay _HpDisplay {get; set;}
     [SerializeField] private UIInfoplate infoplate;
     [SerializeField] private Transform _Model;
     private Color Red = new(255,42,0);
@@ -75,6 +79,7 @@ public sealed class Player : NetworkBehaviour
     private Vector3 _hitNormal;
 
     [Networked, HideInInspector, Capacity(24), OnChangedRender(nameof(OnNicknameChanged))]
+    
 	public string Nickname { get; set; }
     
 
@@ -84,21 +89,24 @@ public sealed class Player : NetworkBehaviour
         _currentEnergy = _MaxEnergy;
 
         _animator = GetComponent<Animator>();
-        _playerHub = GetComponentInChildren<PlayerHub>();
+       
         _attackers = GetComponentsInChildren<IAttack>();
         _mainCamera = Camera.main.gameObject;
         
         Nickname = PlayerPrefs.GetString("PlayerName");
         OnNicknameChanged();
 
-        if(!Object.HasInputAuthority){
+        if(!Object.HasStateAuthority){
             GetComponentInChildren<Camera>().enabled = false;
+            
         }
+        
         KCC.SetGravity(0);
     }
 
     public override void FixedUpdateNetwork()
 	{
+        
 		ProcessInput(PlayerInput.CurrentInput);
                 
         if(PlayerInput.CurrentInput.Fire && !_FireRate.IsCoolingDown){
@@ -109,11 +117,14 @@ public sealed class Player : NetworkBehaviour
 	}
 
 	public override void Render(){
-         if(!Object.HasInputAuthority){
+
+        if(GameManager.Instance.State == GameState.Waiting) return;
+
+        if(!Object.HasInputAuthority){
             infoplate.UpdateHP(_currentHealth, _MaxHealth);
             return;
         }
-            
+        
         if(PlayerInput.CurrentInput.SpeedUpEffect && _currentEnergy > 0){
             Vector3 targetPosition = CameraHandle.transform.localPosition;
             targetPosition.y = Mathf.Lerp(CameraHandle.transform.localPosition.y, 0.5f, Runner.DeltaTime * 10);
@@ -157,7 +168,7 @@ public sealed class Player : NetworkBehaviour
         {
             StartCoroutine(RegenerateEnergy());  // Bắt đầu coroutine để hồi thể lực
         }
-        _playerHub.OnUpdateEnergyBar(_currentEnergy, _MaxEnergy, isRegenerating);
+        PlayerHub.Instance.OnUpdateEnergyBar(_currentEnergy, _MaxEnergy, isRegenerating);
 		// Update camera pivot and transfer properties from camera handle to Main Camera.
 		_mainCamera.transform.SetPositionAndRotation(CameraHandle.position, CameraHandle.rotation);
 	}
@@ -165,7 +176,7 @@ public sealed class Player : NetworkBehaviour
     //=============Xử lý di chuyển=======================================
 
 	private void ProcessInput(GameplayInput input){
-		
+		if(GameManager.Instance.State == GameState.Waiting) return;
         //Set tốc độ di chuyển
 		float speed = (input.Sprint && _currentEnergy > 1)? SprintSpeed : MoveSpeed;
 
@@ -315,6 +326,7 @@ public sealed class Player : NetworkBehaviour
 
         infoplate.UpdateHP(_currentHealth, _MaxHealth);
         _HpDisplay.UpdateHP(_currentHealth, _MaxHealth);
+        PlayerHub.Instance.OnUpdateHpBar(_currentHealth, _MaxHealth);
         if(_currentHealth <= 0){
             //Chết
         }
@@ -332,6 +344,14 @@ public sealed class Player : NetworkBehaviour
         infoplate.SetTeamColor(MyTeam, MyTeam == Team.Red? Red:Blue);
 	}
 
+    private void OnChangeTeam(){
+        int maxHP = _MaxHealth;
+        Color color = MyTeam == Team.Red? Red:Blue;
+        object[] data = {maxHP, Nickname, color};
+
+        _HpDisplay.SetInfo(data);
+    }
+
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
@@ -344,6 +364,18 @@ public sealed class Player : NetworkBehaviour
         object[] data = {maxHP, Nickname, color};
 
         return data;
+    }
+
+    public void Teleport(Vector3 position, Quaternion rotation)
+    {
+        transform.position = position;
+        transform.rotation = rotation;
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void RPC_SetReady()
+    {
+        IsReady = true;
     }
 
     // Animation event

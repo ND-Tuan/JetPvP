@@ -12,7 +12,6 @@ public class MouseLook : MonoBehaviour
 
     [Header("First Person")]
     public GameObject characterBody;
-    public GameObject Follower;
 
     [SerializeField] bool canRotate = true;
 
@@ -24,84 +23,58 @@ public class MouseLook : MonoBehaviour
 
     private Vector2 mouseDelta;
 
-    [HideInInspector]
-    public bool scoped;
-    private Player player;
+ 
 
     void Start()
     {
-        // Set target direction to the camera's initial orientation.
-        targetDirection = transform.localRotation.eulerAngles;
 
         // Set target direction for the character body to its inital state.
         if (characterBody)
             targetCharacterDirection = characterBody.transform.localRotation.eulerAngles;
-        
-        if (lockCursor)
-            LockCursor();
-
-        player = GetComponentInParent<Player>();
-        if(!player.HasInputAuthority){
-            gameObject.SetActive(false);
-            return;
-        }
-
-        this.transform.SetParent(null);
 
     }
 
-    public void LockCursor()
-    {
-        // make the cursor hidden and locked
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-    }
 
     void Update()
     {     
+        //if(GameManager.Instance.State == GameState.Playing) this.enabled = false;
         
-        
+        if(Input.GetMouseButton(0)){
 
-        if (Follower)
-        {
-            transform.position = Follower.transform.position;
-            if(!canRotate)
-                return;
-        }
-
-       var targetOrientation = Quaternion.Euler(targetDirection);
-        var targetCharacterOrientation = Quaternion.Euler(targetCharacterDirection);
-        
-        // Lấy giá trị thay đổi của chuột
-        mouseDelta = new Vector2(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y"));
-        mouseDelta = Vector2.Scale(mouseDelta, new Vector2(sensitivity.x * smoothing.x, sensitivity.y * smoothing.y));
-        
-        // Làm mượt chuyển động của chuột
-        _smoothMouse.x = Mathf.Lerp(_smoothMouse.x, mouseDelta.x, 1f / smoothing.x);
-        _smoothMouse.y = Mathf.Lerp(_smoothMouse.y, mouseDelta.y, 1f / smoothing.y);
-        
-        // Cộng dồn giá trị chuột đã làm mượt
-        _mouseAbsolute += _smoothMouse;
-        
-        // Giới hạn góc quay theo trục x nếu cần
-        if (clampInDegrees.x < 360)
-            _mouseAbsolute.x = Mathf.Clamp(_mouseAbsolute.x, -clampInDegrees.x * 0.5f, clampInDegrees.x * 0.5f);
-        
-        // Giới hạn góc quay theo trục y nếu cần
-        if (clampInDegrees.y < 360)
-            _mouseAbsolute.y = Mathf.Clamp(_mouseAbsolute.y, -clampInDegrees.y * 0.5f, clampInDegrees.y * 0.5f);
-        
-        // Cập nhật góc quay của đối tượng theo trục y
-        transform.localRotation = Quaternion.AngleAxis(-_mouseAbsolute.y, targetOrientation * Vector3.right) * targetOrientation;
-        
-        if (characterBody){
-            // Cập nhật góc quay của thân nhân vật theo trục x
-            var yRotation = Quaternion.AngleAxis(_mouseAbsolute.x, Vector3.up);
-            characterBody.transform.localRotation = yRotation * targetCharacterOrientation;
-        } else {
-            // Cập nhật góc quay của đối tượng theo trục x
-            var yRotation = Quaternion.AngleAxis(_mouseAbsolute.x, transform.InverseTransformDirection(Vector3.up));
-            transform.localRotation *= yRotation;
+            var targetOrientation = Quaternion.Euler(targetDirection);
+            var targetCharacterOrientation = Quaternion.Euler(targetCharacterDirection);
+            
+            // Lấy giá trị thay đổi của chuột
+            mouseDelta = new Vector2(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y"));
+            mouseDelta = Vector2.Scale(mouseDelta, new Vector2(sensitivity.x * smoothing.x, sensitivity.y * smoothing.y));
+            
+            // Làm mượt chuyển động của chuột
+            _smoothMouse.x = Mathf.Lerp(_smoothMouse.x, mouseDelta.x, 1f / smoothing.x);
+            _smoothMouse.y = Mathf.Lerp(_smoothMouse.y, mouseDelta.y, 1f / smoothing.y);
+            
+            // Cộng dồn giá trị chuột đã làm mượt
+            _mouseAbsolute += _smoothMouse;
+            
+            // Giới hạn góc quay theo trục x nếu cần
+            if (clampInDegrees.x < 360)
+                _mouseAbsolute.x = Mathf.Clamp(_mouseAbsolute.x, -clampInDegrees.x * 0.5f, clampInDegrees.x * 0.5f);
+            
+            // Giới hạn góc quay theo trục y nếu cần
+            if (clampInDegrees.y < 360)
+                _mouseAbsolute.y = Mathf.Clamp(_mouseAbsolute.y, -clampInDegrees.y * 0.5f, clampInDegrees.y * 0.5f);
+            
+            // Cập nhật góc quay của đối tượng theo trục y
+            transform.localRotation = Quaternion.AngleAxis(-_mouseAbsolute.y, targetOrientation * Vector3.right) * targetOrientation;
+            
+            if (characterBody){
+                // Cập nhật góc quay của thân nhân vật theo trục x
+                var yRotation = Quaternion.AngleAxis(_mouseAbsolute.x, Vector3.up);
+                characterBody.transform.localRotation = yRotation * targetCharacterOrientation;
+            } else {
+                // Cập nhật góc quay của đối tượng theo trục x
+                var yRotation = Quaternion.AngleAxis(_mouseAbsolute.x, transform.InverseTransformDirection(Vector3.up));
+                transform.localRotation *= yRotation;
+            }
         }
     }
 }

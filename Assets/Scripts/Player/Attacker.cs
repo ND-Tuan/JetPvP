@@ -10,6 +10,7 @@ public class Attacker : NetworkBehaviour, IAttack
     [SerializeField] private GameObject _bulletPrefab;
     [SerializeField] private Transform _FirePos;
     [SerializeField] private Cooldown _cooldown;
+    [SerializeField] private ParticleSystem _particle;
 
 
     public Vector3 _currentDirection = default;
@@ -33,6 +34,7 @@ public class Attacker : NetworkBehaviour, IAttack
     {
         if(_cooldown.IsCoolingDown) return;
         _weapon.Fire(Runner,Object.InputAuthority,transform.forward);
+        _particle.Play();
         _cooldown.StartCooldown();
 
     }
