@@ -20,6 +20,7 @@ public class PlayerHub : MonoBehaviour
     [SerializeField] private GameObject ReadyMenu;
    
     [SerializeField] private GameObject HUBPanel; 
+    
     private List<Player> _PlayerList;
     private List<GameObject> _HpBarList;
 
@@ -36,29 +37,6 @@ public class PlayerHub : MonoBehaviour
         
         gameObject.SetActive(false);
         _PlayerList = new();
-    }
-
-    public void OnDiplayHp(NetworkDictionary<PlayerRef, Player> Players){
-        foreach (KeyValuePair<PlayerRef, Player> player in Players)
-        {   
-            if(!_PlayerList.Contains(player.Value)){
-                object[] data = player.Value.GetInfo();
-
-                int MaxHp = (int)data[0];
-                string name = (string)data[1];
-                Color color  = (Color)data[2];
-
-                GameObject hpBar = Instantiate(_HpBarPrefab, _Content.transform);
-
-                HpBarDisplay display =  hpBar.GetComponent<HpBarDisplay>();
-
-                display.SetInfo(data);
-                player.Value._HpDisplay = display;
-
-                _PlayerList.Add(player.Value);
-                _HpBarList.Add(hpBar);
-            }  
-        }
     }
 
     public void OnUndisplayHp(Player player){
@@ -85,14 +63,15 @@ public class PlayerHub : MonoBehaviour
     }
 
     public void Ready(){
-        GameManager.Instance._player.RPC_SetReady();
-
+        GameManager.Instance._player.RPC_SetReady(true);
+        ReadyMenu.SetActive(false);
         if(GameManager.Instance.State == GameState.Waiting)
             _ReadyStateText.text = "Waiting for other players...";
     }
 
     public void SetPlaying(){
-        ReadyMenu.SetActive(false);
+        
+        _ReadyStateText.gameObject.SetActive(false);
         HUBPanel.SetActive(true);
     }
 }

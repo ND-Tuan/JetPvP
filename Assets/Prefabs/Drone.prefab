@@ -325,8 +325,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2621732968525662492}
-  - component: {fileID: 5979589687053708241}
-  - component: {fileID: 4845733761508631926}
+  - component: {fileID: 5860258828598681111}
   m_Layer: 0
   m_Name: Drone
   m_TagString: Untagged
@@ -353,7 +352,7 @@ Transform:
   - {fileID: 4431875408650099485}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5979589687053708241
+--- !u!114 &5860258828598681111
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -362,33 +361,19 @@ MonoBehaviour:
   m_GameObject: {fileID: 5777780512140444938}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e1c74f23001ad554db1272e13510a8f9, type: 3}
+  m_Script: {fileID: 11500000, guid: 4a853bdf45164609b29affd65ce2b9b0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _damage: 10
-  _bulletPrefab: {fileID: 4656867205423251073, guid: 44b8f25c5c090724682e7a2270f54365,
-    type: 3}
-  _FirePos: {fileID: 5698118750348326042}
   _cooldown:
-    _cooldownTime: 0.1
+    _cooldownTime: 0.15
   _particle: {fileID: 4561333690618688919}
-  _currentDirection: {x: 0, y: 0, z: 0}
---- !u!114 &4845733761508631926
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5777780512140444938}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f7148428fe6e4d1e93495278a1623a99, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _gunExits:
-  - {fileID: 5698118750348326042}
-  _bulletPrefab: {fileID: 5764329759794763602, guid: 44b8f25c5c090724682e7a2270f54365,
+  _fireTransform: {fileID: 5698118750348326042}
+  _fireClip: {fileID: 0}
+  _fireSoundSourcesRoot: {fileID: 2621732968525662492}
+  _projectilePrefab: {fileID: 5271603514421430515, guid: d3c6e1256eda14b4695cbd8040784ab2,
     type: 3}
+  _useBuffer: 0
+  __fireCount: 0
 --- !u!1 &7680088384391855929
 GameObject:
   m_ObjectHideFlags: 0

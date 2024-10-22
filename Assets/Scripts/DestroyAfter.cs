@@ -1,22 +1,27 @@
+using Fusion;
 using UnityEngine;
 
-namespace Starter
-{
+
 	/// <summary>
 	/// Simple component that destroys gameobject after specified time.
 	/// </summary>
-	public class DestroyAfter : MonoBehaviour
+	public class DestroyAfter : NetworkBehaviour
 	{
-		public float DestroyTime = 2f;
+		public float DestroyTime = 0.5f;
+		[Networked]
+    	private TickTimer life { get; set; }
 
-		private void Update()
-		{
-			DestroyTime -= Time.deltaTime;
 
-			if (DestroyTime <= 0f)
-			{
-				Destroy(gameObject);
-			}
+		public override void Spawned()
+    	{
+        	life = TickTimer.CreateFromSeconds(Runner, DestroyTime);
+    	}
+
+    	public override void FixedUpdateNetwork()
+    	{
+        	if (life.Expired(Runner))
+        	{
+            	Runner.Despawn(Object);
+        	}
 		}
 	}
-}

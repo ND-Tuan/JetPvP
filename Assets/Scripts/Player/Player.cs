@@ -5,6 +5,7 @@ using Multiplayer;
 using Fusion.Addons.SimpleKCC;
 using UnityEngine.Rendering;
 using FusionHelpers;
+using Unity.VisualScripting;
 
 public sealed class Player : NetworkBehaviour
 {
@@ -37,8 +38,7 @@ public sealed class Player : NetworkBehaviour
     
     [SerializeField] private int _MaxHealth = 100;
     [Networked] public Stage stage { get; set; }
-    [Networked, OnChangedRender(nameof(OnChangeTeam))]
-    public Team MyTeam { get; set; }
+    public Team MyTeam;
     public bool IsReady ;
     
 	private int _currentHealth;
@@ -62,8 +62,8 @@ public sealed class Player : NetworkBehaviour
 
     [Header("Attack")]
     [SerializeField] private Transform _RaycastPoint;
-    [SerializeField] private Cooldown _FireRate;
-    private IAttack[] _attackers;
+    [SerializeField] private Transform _RaycastEnd;
+    private WeaponBase[] _attackers;
     private Vector3 _currentDirection;
     
     [Header("Visual")]
@@ -71,8 +71,7 @@ public sealed class Player : NetworkBehaviour
     private PlayerHub _playerHub;
     [Networked] public HpBarDisplay _HpDisplay {get; set;}
     [SerializeField] private UIInfoplate infoplate;
-    [SerializeField] private Transform _Model;
-    private Color Red = new(255,42,0);
+    public Transform _Model;
 	private	Color Blue = new(0,180,255);
     
     private Vector3 _hitPosition;
@@ -90,7 +89,7 @@ public sealed class Player : NetworkBehaviour
 
         _animator = GetComponent<Animator>();
        
-        _attackers = GetComponentsInChildren<IAttack>();
+        _attackers = GetComponentsInChildren<WeaponBase>();
         _mainCamera = Camera.main.gameObject;
         
         Nickname = PlayerPrefs.GetString("PlayerName");
@@ -98,8 +97,15 @@ public sealed class Player : NetworkBehaviour
 
         if(!Object.HasStateAuthority){
             GetComponentInChildren<Camera>().enabled = false;
+
+            //ẩn trong màn hình chuẩn bị
+            foreach(WeaponBase attacker in _attackers){
+                attacker.gameObject.SetActive(false);
+            }
             
         }
+        //ẩn trong màn hình chuẩn bị
+        infoplate.gameObject.SetActive(false);
         
         KCC.SetGravity(0);
     }
@@ -109,7 +115,7 @@ public sealed class Player : NetworkBehaviour
         
 		ProcessInput(PlayerInput.CurrentInput);
                 
-        if(PlayerInput.CurrentInput.Fire && !_FireRate.IsCoolingDown){
+        if(PlayerInput.CurrentInput.Fire){
             Shoot();
         }
             
@@ -127,19 +133,19 @@ public sealed class Player : NetworkBehaviour
         
         if(PlayerInput.CurrentInput.SpeedUpEffect && _currentEnergy > 0){
             Vector3 targetPosition = CameraHandle.transform.localPosition;
-            targetPosition.y = Mathf.Lerp(CameraHandle.transform.localPosition.y, 0.5f, Runner.DeltaTime * 10);
+            targetPosition.y = Mathf.Lerp(CameraHandle.transform.localPosition.y, 3f, Runner.DeltaTime * 10);
             CameraHandle.transform.localPosition = targetPosition + GetCameraShakeOffset();
         } else {
             // Giữ nguyên vị trí camera, đặt về vị trí mặc định
             Vector3 targetPosition = new(0,CameraHandle.transform.localPosition.y,-23);
-            targetPosition.y = Mathf.Lerp(CameraHandle.transform.localPosition.y, 3, Runner.DeltaTime * 10);
+            targetPosition.y = Mathf.Lerp(CameraHandle.transform.localPosition.y, 5, Runner.DeltaTime * 10);
             CameraHandle.transform.localPosition = targetPosition;
         }
 
         if(Physics.Raycast(_RaycastPoint.position, CameraHandle.forward, out _hit, 200, _HitMask)){
-            _currentDirection = _hit.point - CameraHandle.position;
+            _currentDirection = _hit.point;
         } else {
-            _currentDirection = CameraHandle.forward;
+            _currentDirection = _RaycastEnd.position;
         }
 
         foreach (var attacker in _attackers)
@@ -310,23 +316,22 @@ public sealed class Player : NetworkBehaviour
     {   
         foreach (var attack in _attackers)
         {
-            attack.Attack(MyTeam);
+            attack.Fire();
         }
-
-        _FireRate.StartCooldown();
-
     }
 
 
     //==================================================================
     //=============Xử lý sát thương=====================================
-
+    
     public void TakeDamage(int damage){
         _currentHealth -= damage;
 
         infoplate.UpdateHP(_currentHealth, _MaxHealth);
         _HpDisplay.UpdateHP(_currentHealth, _MaxHealth);
-        PlayerHub.Instance.OnUpdateHpBar(_currentHealth, _MaxHealth);
+
+        if(Object.HasStateAuthority)
+            PlayerHub.Instance.OnUpdateHpBar(_currentHealth, _MaxHealth);
         if(_currentHealth <= 0){
             //Chết
         }
@@ -336,35 +341,20 @@ public sealed class Player : NetworkBehaviour
     private void OnNicknameChanged(){
 
 		if (HasStateAuthority){
-            infoplate.gameObject.SetActive(false);
             return; // Chỉ hiển thị tên của người chơi khác
         }
 
 		infoplate.SetNickname(Nickname);
-        infoplate.SetTeamColor(MyTeam, MyTeam == Team.Red? Red:Blue);
+       
 	}
 
-    private void OnChangeTeam(){
-        int maxHP = _MaxHealth;
-        Color color = MyTeam == Team.Red? Red:Blue;
-        object[] data = {maxHP, Nickname, color};
-
-        _HpDisplay.SetInfo(data);
-    }
-
+    
     void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawRay(_RaycastPoint.position, CameraHandle.forward * 200);
     }
 
-    public object[] GetInfo(){
-        int maxHP = _MaxHealth;
-        Color color = MyTeam == Team.Red? Red:Blue;
-        object[] data = {maxHP, Nickname, color};
-
-        return data;
-    }
 
     public void Teleport(Vector3 position, Quaternion rotation)
     {
@@ -373,10 +363,46 @@ public sealed class Player : NetworkBehaviour
     }
 
     [Rpc(RpcSources.All, RpcTargets.All)]
-    public void RPC_SetReady()
-    {
-        IsReady = true;
+    public void RPC_StartGame(Team team, Vector3 position, Quaternion rotation){
+        //set team
+        MyTeam = team;
+        
+        string maxHP = _MaxHealth.ToString();
+        Color color = MyTeam == Team.Red? Color.red : Blue;
+        object[] data = {maxHP, Nickname, color};
+
+        _HpDisplay.SetInfo(data);
+
+        //tái hiển thị
+        if(!Object.HasStateAuthority){
+            infoplate.gameObject.SetActive(true);
+            infoplate.SetTeamColor(MyTeam, color);
+
+            foreach(WeaponBase attacker in _attackers){
+                attacker.gameObject.SetActive(true);
+            }
+        }
+
+        //Dịch chuyển
+        transform.position = position;
+        transform.rotation = rotation;
+            
     }
+
+
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void RPC_SetReady(bool ReadyOrNot)
+    {
+        IsReady = ReadyOrNot;
+
+        string maxHP = !ReadyOrNot?  "X" : "O";
+        Color color = !ReadyOrNot? Color.red : Color.green;
+        object[] data = {maxHP, Nickname, color};
+
+        _HpDisplay.SetInfo(data);
+    }
+
+
 
     // Animation event
 }
