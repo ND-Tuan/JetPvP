@@ -1,0 +1,25 @@
+"filename", "language", "C#", "comment", "blank", "total"
+"e:\Unity Projects\Project\My project\Assets\Scripts\Combine.cs", "C#", -35, -9, -15, -59
+"e:\Unity Projects\Project\My project\Assets\Scripts\DestroyAfter.cs", "C#", 19, 3, 6, 28
+"e:\Unity Projects\Project\My project\Assets\Scripts\GameController\GameManager.cs", "C#", 97, 11, 39, 147
+"e:\Unity Projects\Project\My project\Assets\Scripts\GameController\ObjectPoolManager.cs", "C#", -78, -5, -10, -93
+"e:\Unity Projects\Project\My project\Assets\Scripts\Object\Flag.cs", "C#", 24, 0, 5, 29
+"e:\Unity Projects\Project\My project\Assets\Scripts\Object\IProjectile.cs", "C#", 7, 0, 2, 9
+"e:\Unity Projects\Project\My project\Assets\Scripts\Object\KeepOriginRotation.cs", "C#", 17, 1, 5, 23
+"e:\Unity Projects\Project\My project\Assets\Scripts\Object\PhysicsProjectile.cs", "C#", 92, 14, 36, 142
+"e:\Unity Projects\Project\My project\Assets\Scripts\Observer\EvenID.cs", "C#", 1, 0, 0, 1
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\Attacker.cs", "C#", -53, -4, -21, -78
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\FlagCapturer.cs", "C#", 27, 0, 8, 35
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\KeepOriginRotation.cs", "C#", -17, -1, -5, -23
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\MouseLook.cs", "C#", -70, -11, -27, -108
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\Player.cs", "C#", 121, 24, 35, 180
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\PlayerInput.cs", "C#", 6, 0, 5, 11
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\WeaponBase.cs", "C#", 46, 7, 19, 72
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\Weapon_NetworkObject.cs", "C#", 44, 22, 17, 83
+"e:\Unity Projects\Project\My project\Assets\Scripts\RotateObject.cs", "C#", 39, 0, 7, 46
+"e:\Unity Projects\Project\My project\Assets\Scripts\UIController\HpBarDisplay.cs", "C#", -1, 0, 2, 1
+"e:\Unity Projects\Project\My project\Assets\Scripts\UIController\NewBehaviourScript.cs", "C#", -12, -2, -5, -19
+"e:\Unity Projects\Project\My project\Assets\Scripts\UIController\PlayerHub.cs", "C#", 37, -6, 0, 31
+"e:\Unity Projects\Project\My project\Assets\Scripts\UIController\UIGameMenu.cs", "C#", 3, 0, 1, 4
+"e:\Unity Projects\Project\My project\Assets\Scripts\UIController\UIInfoplate.cs", "C#", 1, 0, 1, 2
+"Total", "-", 315, 44, 105, 464

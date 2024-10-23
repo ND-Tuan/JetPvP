@@ -93,9 +93,7 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 		private void OnAllReady(){
 			//chuẩn bị map
 			Map1.SetActive(true);
-			BlueTeamSpawnPoint = GameObject.FindGameObjectWithTag("BlueFlag").transform;
-			RedTeamSpawnPoint = GameObject.FindGameObjectWithTag("RedFlag").transform;
-					
+		
 			//Set cam
 			MainCamera.clearFlags = CameraClearFlags.Skybox;
 
@@ -114,14 +112,20 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
     	{
 			foreach (KeyValuePair<PlayerRef, Player> player in Players)
 			{   
+				
+
+				//chuyển người chơi sang trạng thái chơi
+				player.Value.RPC_StartGame(SetTeam? Team.Blue : Team.Red);
+				SetTeam = !SetTeam;
+
 				//Đưa người chơi về vị trí mỗi đội
-				var SpawnPoint = _player.MyTeam == Team.Blue? BlueTeamSpawnPoint : RedTeamSpawnPoint;
+        		var SpawnPoint = player.Value.MyTeam == Team.Blue?   GameObject.FindGameObjectWithTag("BlueFlag").transform 
+                                              : GameObject.FindGameObjectWithTag("RedFlag").transform;
+                                              
 				var randomPositionOffset = Random.insideUnitCircle * SpawnRadius;
 				var spawnPosition = SpawnPoint.position + new Vector3(randomPositionOffset.x, transform.position.y, randomPositionOffset.y);
 
-				//chuyển người chơi sang trạng thái chơi
-				player.Value.RPC_StartGame(SetTeam? Team.Blue : Team.Red, spawnPosition, SpawnPoint.rotation);
-				SetTeam = !SetTeam;
+				player.Value.Teleport(spawnPosition, SpawnPoint.rotation);
 			}
 
 			

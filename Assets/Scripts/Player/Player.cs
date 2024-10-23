@@ -6,6 +6,7 @@ using Fusion.Addons.SimpleKCC;
 using UnityEngine.Rendering;
 using FusionHelpers;
 using Unity.VisualScripting;
+using UnityEngine.UIElements;
 
 public sealed class Player : NetworkBehaviour
 {
@@ -37,19 +38,11 @@ public sealed class Player : NetworkBehaviour
     [Header("Status")]
     
     [SerializeField] private int _MaxHealth = 100;
-    [Networked] public Stage stage { get; set; }
     public Team MyTeam;
     public bool IsReady ;
     
 	private int _currentHealth;
     
-    public enum Stage{
-		New,
-		TeleportOut,
-		TeleportIn,
-		Active,
-		Dead
-	}
     public struct DamageEvent : INetworkEvent{
 		public int damage;
 	}
@@ -78,7 +71,6 @@ public sealed class Player : NetworkBehaviour
     private Vector3 _hitNormal;
 
     [Networked, HideInInspector, Capacity(24), OnChangedRender(nameof(OnNicknameChanged))]
-    
 	public string Nickname { get; set; }
     
 
@@ -126,12 +118,23 @@ public sealed class Player : NetworkBehaviour
 
         if(GameManager.Instance.State == GameState.Waiting) return;
 
+        //Update lượng máu
         if(!Object.HasInputAuthority){
             infoplate.UpdateHP(_currentHealth, _MaxHealth);
             return;
         }
         
+        // Render hiệu ứng nghiêng máy bay 
+        RotationJetWithMovement(PlayerInput.CurrentInput);
+
+		float smoothZTiltAngle = Mathf.SmoothDampAngle( _Model.localRotation.eulerAngles.z, -currentZTiltAngle, ref _zRotationVelocity, RotationSmoothTime);
+        float smoothXTiltAngle = Mathf.SmoothDampAngle( _Model.localRotation.eulerAngles.x, currentXTiltAngle, ref _xRotationVelocity, RotationSmoothTime);
+
+        _Model.localRotation = Quaternion.Euler(smoothXTiltAngle, 0, smoothZTiltAngle); 
+
+        //Render vị trí CameraHandle
         if(PlayerInput.CurrentInput.SpeedUpEffect && _currentEnergy > 0){
+            // Hạ thấp + rung camera 
             Vector3 targetPosition = CameraHandle.transform.localPosition;
             targetPosition.y = Mathf.Lerp(CameraHandle.transform.localPosition.y, 3f, Runner.DeltaTime * 10);
             CameraHandle.transform.localPosition = targetPosition + GetCameraShakeOffset();
@@ -142,40 +145,44 @@ public sealed class Player : NetworkBehaviour
             CameraHandle.transform.localPosition = targetPosition;
         }
 
+        //Ngắm bắn
         if(Physics.Raycast(_RaycastPoint.position, CameraHandle.forward, out _hit, 200, _HitMask)){
             _currentDirection = _hit.point;
         } else {
             _currentDirection = _RaycastEnd.position;
         }
 
+        //xoay về vị trí mục tiêu
         foreach (var attacker in _attackers)
         {
             attacker.SetRotation(_currentDirection);
         }
-            
-        RotationJetWithMovement(PlayerInput.CurrentInput);
+        
 
-		float smoothZTiltAngle = Mathf.SmoothDampAngle( _Model.localRotation.eulerAngles.z, -currentZTiltAngle, ref _zRotationVelocity, RotationSmoothTime);
-        float smoothXTiltAngle = Mathf.SmoothDampAngle( _Model.localRotation.eulerAngles.x, currentXTiltAngle, ref _xRotationVelocity, RotationSmoothTime);
-
-        _Model.localRotation = Quaternion.Euler(smoothXTiltAngle, 0, smoothZTiltAngle); 
+        
 	}
 
 	private void LateUpdate()
 	{
+        // Xử lý c
         CameraPivot.rotation = Quaternion.Euler(PlayerInput.CurrentInput.LookRotation);
+
+        //??? nhớ test lại
 		if (HasStateAuthority == false){
             infoplate.UpdateHP(_currentHealth, _MaxHealth);
             return;
         } 
 
-        
+        //Xử lý hồi năng lượng
         if (!isRegenerating && _currentEnergy < _MaxEnergy && !PlayerInput.CurrentInput.SpeedUpEffect)
         {
             StartCoroutine(RegenerateEnergy());  // Bắt đầu coroutine để hồi thể lực
         }
+
+        //hiển thị
         PlayerHub.Instance.OnUpdateEnergyBar(_currentEnergy, _MaxEnergy, isRegenerating);
-		// Update camera pivot and transfer properties from camera handle to Main Camera.
+
+		// Truyền trạng thái vị trí cho camera qua CameraHandle
 		_mainCamera.transform.SetPositionAndRotation(CameraHandle.position, CameraHandle.rotation);
 	}
 
@@ -183,9 +190,11 @@ public sealed class Player : NetworkBehaviour
 
 	private void ProcessInput(GameplayInput input){
 		if(GameManager.Instance.State == GameState.Waiting) return;
+
         //Set tốc độ di chuyển
 		float speed = (input.Sprint && _currentEnergy > 1)? SprintSpeed : MoveSpeed;
 
+        //cho phép tăng tốc nếu đủ năng lượng (chỉ bắt đầu hồi khi người chơi nhả nút tăng tốc)
         if(input.SpeedUpEffect && _currentEnergy > 0){
            _currentEnergy -= 8 * Time.deltaTime;
            if(_currentEnergy < 0) _currentEnergy = 0;
@@ -219,11 +228,13 @@ public sealed class Player : NetworkBehaviour
             moveDirection = Vector3.zero;
         }
 
+        //tránh mất tốc đột ngột nếu có hiện tượng lag
         var desiredMoveVelocity = moveDirection * speed;
 		_moveVelocity = Vector3.Lerp(_moveVelocity, desiredMoveVelocity, 50 * Runner.DeltaTime);
 		KCC.Move(desiredMoveVelocity);
 	}
 
+    //Coroutine hồi năng lượng
     private IEnumerator RegenerateEnergy()
     {
         isRegenerating = true;
@@ -252,11 +263,13 @@ public sealed class Player : NetworkBehaviour
         float targetZTiltAngle = 0f;
         float targetXTiltAngle = 0f;
 
+        //nghiêng theo hướng nhìn
         if(input.LookRotationDelta.x !=  0){
             currentZTiltAngle = _mainCamera.transform.eulerAngles.y - transform.eulerAngles.y;
             return;
         }
 
+        //Nghiêng theo hướng lượn trái, phải
         // Kiểm tra đầu vào từ bàn phím
         if (input.IsRotateX){
             currentZTiltAngle = 45*Mathf.Sign(Input.GetAxisRaw("Horizontal"));
@@ -309,6 +322,15 @@ public sealed class Player : NetworkBehaviour
         );
     }
 
+    //Tắt hiển thị
+    private void Hide(){
+        infoplate.gameObject.SetActive(false);
+        _Model.gameObject.SetActive(false);
+        foreach(WeaponBase attacker in _attackers){
+            attacker.gameObject.SetActive(false);
+        }
+    }
+
     //==================================================================
     //=============Xử lý tấn công=======================================
 
@@ -333,6 +355,7 @@ public sealed class Player : NetworkBehaviour
         if(Object.HasStateAuthority)
             PlayerHub.Instance.OnUpdateHpBar(_currentHealth, _MaxHealth);
         if(_currentHealth <= 0){
+            _currentHealth = 0; //tránh máu âm
             //Chết
         }
     }
@@ -348,22 +371,22 @@ public sealed class Player : NetworkBehaviour
        
 	}
 
-    
-    void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.red;
-        Gizmos.DrawRay(_RaycastPoint.position, CameraHandle.forward * 200);
-    }
-
-
-    public void Teleport(Vector3 position, Quaternion rotation)
-    {
-        transform.position = position;
-        transform.rotation = rotation;
-    }
-
+    // đưa người chơi vào trạng thái sẵn sàng
     [Rpc(RpcSources.All, RpcTargets.All)]
-    public void RPC_StartGame(Team team, Vector3 position, Quaternion rotation){
+    public void RPC_SetReady(bool ReadyOrNot)
+    {
+        IsReady = ReadyOrNot;
+
+        string maxHP = !ReadyOrNot?  "X" : "O";
+        Color color = !ReadyOrNot? Color.red : Color.green;
+        object[] data = {maxHP, Nickname, color};
+
+        _HpDisplay.SetInfo(data);
+    }
+
+    //đưa người chơi vào trạng thái chơi
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    public void RPC_StartGame(Team team){
         //set team
         MyTeam = team;
         
@@ -383,36 +406,14 @@ public sealed class Player : NetworkBehaviour
             }
         }
 
-        //Dịch chuyển
-        transform.position = position;
-        transform.rotation = rotation;
-            
     }
 
-
-    [Rpc(RpcSources.All, RpcTargets.All)]
-    public void RPC_SetReady(bool ReadyOrNot)
-    {
-        IsReady = ReadyOrNot;
-
-        string maxHP = !ReadyOrNot?  "X" : "O";
-        Color color = !ReadyOrNot? Color.red : Color.green;
-        object[] data = {maxHP, Nickname, color};
-
-        _HpDisplay.SetInfo(data);
+    public void Teleport(Vector3 position, Quaternion rotation){
+        KCC.SetPosition(position);
+        KCC.SetLookRotation(rotation);
     }
 
-
-
-    // Animation event
-}
-    
-
-
-public static class SynchronizeWithRotation 
-{
-    public static Matrix4x4 Matrix = Matrix4x4.Rotate(Quaternion.Euler(0, 45, 0));
-    public static Vector3 Synchronize(this Vector3 input) => Matrix.MultiplyPoint3x4(input);
+    // Xử lý Animation (Tạm chưa có j)
 }
 
 public enum Team
