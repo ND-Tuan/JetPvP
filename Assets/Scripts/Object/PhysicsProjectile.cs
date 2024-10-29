@@ -43,7 +43,7 @@ using Unity.VisualScripting;
 			_rigidbody.Rigidbody.isKinematic = false;
 
 			//bỏ qua va chạm với người bắn
-			Physics.IgnoreCollision(_collider, player._Model.GetComponent<Collider>(), true);
+			Physics.IgnoreCollision(_collider, player.GetComponent<Collider>(), true);
 
 			//thêm lực
 			_rigidbody.Rigidbody.AddForce(transform.forward * _initialImpulse, ForceMode.Impulse);
@@ -84,11 +84,6 @@ using Unity.VisualScripting;
 			_collider = GetComponentInChildren<Collider>();
 
 			_collider.enabled = false;
-
-			if (_hitEffect != null)
-			{
-				//_hitEffect.SetActive(false);
-			}
 		}
 
 
@@ -99,13 +94,10 @@ using Unity.VisualScripting;
 				Player player =collision.gameObject.GetComponent<Player>();
 
 				if(player.MyTeam != _firePlayer.MyTeam)
-					player.TakeDamage(_damge);
+					player.RPC_TakeDamage(_damge);
 			}
 
 			ProcessHit();
-
-			
-			
 		}
 
 		// PRIVATE METHODS
@@ -118,7 +110,7 @@ using Unity.VisualScripting;
 			_lifeCooldown = TickTimer.CreateFromSeconds(Runner, _lifeTimeAfterHit);
 
 			// Stop the movement
-			Physics.IgnoreCollision(_collider, _firePlayer._Model.GetComponent<Collider>(), false);
+			Physics.IgnoreCollision(_collider, _firePlayer.GetComponent<Collider>(), false);
 			_rigidbody.Rigidbody.isKinematic = true;
 			_collider.enabled = false;
 		}

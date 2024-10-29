@@ -1,0 +1,40 @@
+Date : 2024-10-26 20:27:54
+Directory : e:\Unity Projects\Project\My project\Assets\Scripts
+Total : 11 files,  106 codes, 31 comments, 29 blanks, all 166 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| C#       |         11 |        106 |         31 |         29 |        166 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++-----------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                              | files      | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                 |         11 |        106 |         31 |         29 |        166 |
+| . (Files)                                                                         |          1 |          0 |          0 |          1 |          1 |
+| GameController                                                                    |          1 |          6 |          0 |          6 |         12 |
+| Object                                                                            |          1 |         -3 |         -1 |         -4 |         -8 |
+| Player                                                                            |          4 |         90 |         33 |         23 |        146 |
+| UIController                                                                      |          4 |         13 |         -1 |          3 |         15 |
++-----------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-----------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                                          | language | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| e:\Unity Projects\Project\My project\Assets\Scripts\Cooldown.cs                   | C#       |          0 |          0 |          1 |          1 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\GameController\GameManager.cs | C#       |          6 |          0 |          6 |         12 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Object\PhysicsProjectile.cs   | C#       |         -3 |         -1 |         -4 |         -8 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Player\FlagCapturer.cs        | C#       |         12 |          0 |          1 |         13 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Player\Player.cs              | C#       |         49 |         28 |         18 |         95 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Player\PlayerDetecter.cs      | C#       |         29 |          5 |          5 |         39 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Player\PlayerInput.cs         | C#       |          0 |          0 |         -1 |         -1 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\UIController\HpBarDisplay.cs  | C#       |          2 |          0 |          1 |          3 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\UIController\PlayerHub.cs     | C#       |         11 |          0 |          1 |         12 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\UIController\UIGameMenu.cs    | C#       |         -2 |          0 |          1 |         -1 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\UIController\UIInfoplate.cs   | C#       |          2 |         -1 |          0 |          1 |
+| Total                                                                             |          |        106 |         31 |         29 |        166 |
++-----------------------------------------------------------------------------------+----------+------------+------------+------------+------------+

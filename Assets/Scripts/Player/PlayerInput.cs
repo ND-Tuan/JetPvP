@@ -42,17 +42,16 @@ namespace Multiplayer
 		{	
 			if((GameManager.Instance.State == GameState.Waiting && Input.GetMouseButton(0))
 				 || GameManager.Instance.State == GameState.Playing)
+
 				_input.LookRotationDelta = new Vector2(-Input.GetAxisRaw("Mouse Y"), Input.GetAxisRaw("Mouse X"));
 				_input.LookRotation = ClampLookRotation(_input.LookRotation + _input.LookRotationDelta);
 			
 			// Accumulate input only if the cursor is locked.
-			if (Cursor.lockState != CursorLockMode.Locked)
+			if (Cursor.lockState != CursorLockMode.Locked || GameManager.Instance._player.State == global::Player.PlayerState.Death)
 				return;
 
 			// Accumulate input from Keyboard/Mouse. Input accumulation is mandatory (at least for look rotation here) as Update can be
 			// called multiple times before next FixedUpdateNetwork is called - common if rendering speed is faster than Fusion simulation.
-
-		
 
 			var moveDirection = new Vector2(Input.GetAxisRaw("Horizontal"), 1);
 			_input.IsRotateX = moveDirection.x != 0;

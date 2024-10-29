@@ -5,30 +5,44 @@ using UnityEngine;
 
 public class FlagCapturer : MonoBehaviour
 {
-    private string _flagtag;
     [SerializeField]private GameObject RedFlag;
     [SerializeField]private GameObject BlueFlag;
-
+    [SerializeField] private MeshRenderer DisplayOnMiniMap;
+    [SerializeField] private Material[] materials = new Material[2];
+    private bool check;
+    private bool HasFlag = false;
     private GameObject OpponentFlag;
+    private Flag flag;
 
 
-    void Start()
+    public void SetCapturer(Team team)
     {
-       bool check = GetComponent<Player>().MyTeam == Team.Blue;
-
-       _flagtag = check? "RedFlag" : "BlueFlag";
+       check = team == Team.Blue;
        OpponentFlag = check? RedFlag : BlueFlag;
+       DisplayOnMiniMap.material = materials[check? 0:1];
     }
 
     void OnTriggerEnter(Collider other)
     {
-        if(other.CompareTag(_flagtag)){
-            other.GetComponent<Flag>().Captured();
+        if(other.CompareTag(check? "RedFlag" : "BlueFlag")){
+            flag = other.GetComponent<Flag>();
+            flag.HasBeenCaptured = true;
             OpponentFlag.SetActive(true);
+            GetComponent<RotateObject>().enabled = true;
+
+            HasFlag = true;
+        }
+
+        if(other.CompareTag(!check? "RedFlag" : "BlueFlag") && HasFlag){
+
         }
     }
 
     public void DropFlag(){
+        if(!HasFlag) return;
         OpponentFlag.SetActive(false);
+        GetComponent<RotateObject>().enabled = false;
+        flag.HasBeenCaptured = false;
+        HasFlag = false;
     }
 }

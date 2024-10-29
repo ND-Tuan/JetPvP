@@ -22,16 +22,14 @@ public class HpBarDisplay : NetworkBehaviour
     public void SetInfo(object[] data){
 
         _HpText.text = (string)data[0];
-        _name.text = (string)data[1];
         _hpFill.color = (Color)data[2];
-    }
 
-    public void SetMaxHp(int maxHp){
-        _hpBar.maxValue = maxHp;
-        _hpBar.value = maxHp;
+        if(Object.HasStateAuthority)
+        _name.text = (string)data[1];
     }
 
     public void UpdateHP(int currentHP, int maxHP){
+        if(currentHP <0) currentHP = 0;
 		_hpBar.value = currentHP;
 		_hpBar.maxValue = maxHP;
 

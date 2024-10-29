@@ -7,6 +7,7 @@ public enum GameState
 {
     Waiting,
     Playing,
+	Win,
 }
 
 public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
@@ -93,6 +94,8 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 		private void OnAllReady(){
 			//chuẩn bị map
 			Map1.SetActive(true);
+			BlueTeamSpawnPoint = GameObject.FindGameObjectWithTag("BlueFlag").transform;
+			RedTeamSpawnPoint = GameObject.FindGameObjectWithTag("RedFlag").transform;
 		
 			//Set cam
 			MainCamera.clearFlags = CameraClearFlags.Skybox;
@@ -106,32 +109,32 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
 			//Khóa phòng
 			Runner.SessionInfo.IsOpen = false;
+
+			Cursor.lockState = CursorLockMode.Locked;
+			Cursor.visible = false;
 		}
 
     	private void PreparePlayers()
     	{
 			foreach (KeyValuePair<PlayerRef, Player> player in Players)
 			{   
-				
-
 				//chuyển người chơi sang trạng thái chơi
 				player.Value.RPC_StartGame(SetTeam? Team.Blue : Team.Red);
 				SetTeam = !SetTeam;
 
 				//Đưa người chơi về vị trí mỗi đội
-        		var SpawnPoint = player.Value.MyTeam == Team.Blue?   GameObject.FindGameObjectWithTag("BlueFlag").transform 
-                                              : GameObject.FindGameObjectWithTag("RedFlag").transform;
-                                              
-				var randomPositionOffset = Random.insideUnitCircle * SpawnRadius;
-				var spawnPosition = SpawnPoint.position + new Vector3(randomPositionOffset.x, transform.position.y, randomPositionOffset.y);
-
-				player.Value.Teleport(spawnPosition, SpawnPoint.rotation);
+        		TelePlayer(player.Value);
 			}
-
-			
     	}
 
+		private void TelePlayer(Player player){
+        	var SpawnPoint = player.MyTeam == Team.Blue?   BlueTeamSpawnPoint : RedTeamSpawnPoint;
+                                          
+			var randomPositionOffset = Random.insideUnitCircle * SpawnRadius;
+			var spawnPosition = SpawnPoint.position + new Vector3(randomPositionOffset.x, transform.position.y, randomPositionOffset.y);
 
+			player.Teleport(spawnPosition, SpawnPoint.rotation);
+		}
 
     	public void PlayerJoined(PlayerRef player)
     	{
@@ -168,6 +171,20 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
 		private void GameStateChanged()
     	{
+			switch(State){
+				case GameState.Playing:
+					OnAllReady();
+					break;
+				
+				case GameState.Win:
+					foreach (KeyValuePair<PlayerRef, Player> player in Players)
+					{
+						player.Value.State = Player.PlayerState.Rest;
+						player.Value.State = Player.PlayerState.Active;
+					}
+					break;
+			}
+
         	if(State == GameState.Playing){
 				OnAllReady();
 			}

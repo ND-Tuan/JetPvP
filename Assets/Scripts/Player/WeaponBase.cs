@@ -9,6 +9,7 @@ using Fusion;
 
 		protected Transform FireTransform => _fireTransform;
 		protected Cooldown Cooldown => _cooldown;
+		protected Vector3 HitPoint => _hitPoint;
 
 		// PRIVATE MEMBERS
 		[SerializeField] private Cooldown _cooldown;
@@ -22,6 +23,7 @@ using Fusion;
 		private Transform _fireSoundSourcesRoot;
 
 		private AudioSource[] _fireSoundSources;
+		private Vector3 _hitPoint;
 
 		// PUBLIC METHODS
 
@@ -58,6 +60,7 @@ using Fusion;
 		}
 
 		public void SetRotation(Vector3 hitPoint){
+			this._hitPoint = hitPoint;
 			Vector3 Diraction = hitPoint - transform.position;
 			RPC_Rotation(Diraction);
     	}

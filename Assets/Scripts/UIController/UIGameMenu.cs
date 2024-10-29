@@ -96,6 +96,11 @@ namespace Starter
 				return; // Panel cannot be hidden if the game is not running
 
 			PanelGroup.gameObject.SetActive(!PanelGroup.gameObject.activeSelf);
+
+			if(!PanelGroup.gameObject.activeSelf){
+				Cursor.lockState = CursorLockMode.Locked;
+				Cursor.visible = false;
+			}
 		}
 
 		private void OnEnable()
@@ -130,12 +135,6 @@ namespace Starter
 
 				Cursor.lockState = CursorLockMode.None;
 				Cursor.visible = true;
-			}
-			else
-			{
-				if(GameManager.Instance.State == GameState.Waiting) return;
-				Cursor.lockState = CursorLockMode.Locked;
-				Cursor.visible = false;
 			}
 		}
 

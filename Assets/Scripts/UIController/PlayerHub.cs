@@ -19,7 +19,9 @@ public class PlayerHub : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _ReadyStateText;
     [SerializeField] private GameObject ReadyMenu;
    
-    [SerializeField] private GameObject HUBPanel; 
+    [SerializeField] private GameObject HUBPanel;
+    [SerializeField] private GameObject DeathPanel;
+    [SerializeField] private TextMeshProUGUI CooldownText;
     
     private List<Player> _PlayerList;
     private List<GameObject> _HpBarList;
@@ -57,7 +59,7 @@ public class PlayerHub : MonoBehaviour
     }
 
     public void OnUpdateHpBar(float value, float maxValue){
-
+        if(value <0) value = 0;
         _HpBar.maxValue = maxValue;
         _HpBar.value = value;
     }
@@ -71,7 +73,17 @@ public class PlayerHub : MonoBehaviour
 
     public void SetPlaying(){
         
-        _ReadyStateText.gameObject.SetActive(false);
+        _ReadyStateText.text = "";
         HUBPanel.SetActive(true);
+    }
+
+    public void SetStatusDisplay(bool IsAlive){
+        HUBPanel.SetActive(IsAlive);
+        DeathPanel.SetActive(!IsAlive);
+    }
+
+    public void UpdateRespawnTime(int time){
+        if(time<0) time = 0;
+        CooldownText.text = "Revive in: " + time.ToString()+"s";
     }
 }

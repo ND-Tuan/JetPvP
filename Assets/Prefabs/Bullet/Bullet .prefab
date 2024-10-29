@@ -237,7 +237,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 840d380370434ad5b62c13152aaad35b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _initialImpulse: 55
+  _initialImpulse: 65
   _damge: 10
   _lifeTime: 3
   _visualsRoot: {fileID: 6590583413685715370}
