@@ -7,7 +7,9 @@ using UnityEngine;
 public class Flag : NetworkBehaviour
 {
     [SerializeField] private GameObject _flag;
+    [SerializeField] private Team _flagType;
     private RotateObject[] rotateObjects;
+    
     [Networked, HideInInspector, OnChangedRender(nameof(OnStateChanged))] public bool HasBeenCaptured {get; set;}
 
     private void OnStateChanged()
@@ -25,6 +27,20 @@ public class Flag : NetworkBehaviour
     {
         rotateObjects = GetComponentsInChildren<RotateObject>();
         
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if(other.CompareTag("Player") && GameManager.Instance.State == GameState.Playing){
+            FlagCapturer capturer = other.GetComponentInChildren<FlagCapturer>();
+
+            if(capturer == null) return;    
+            
+            if(capturer.HasFlag && _flagType == capturer.check){
+                GameManager.Instance.Winner = _flagType;
+                GameManager.Instance.State = GameState.Win;
+            }
+        }
     }
 
     private void Captured(){

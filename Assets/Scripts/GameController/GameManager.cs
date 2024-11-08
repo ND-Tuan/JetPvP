@@ -2,10 +2,14 @@
 using Fusion;
 using System.Collections.Generic;
 using System.Linq;
+using System.Collections;
+using System.Threading.Tasks;
 
 public enum GameState
 {
     Waiting,
+	AllReady,
+	Cooldown,
     Playing,
 	Win,
 }
@@ -14,7 +18,6 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 	{
 		[Networked, OnChangedRender(nameof(GameStateChanged))] public GameState State { get; set; }	= GameState.Waiting;	
 		public GameObject Map1;
-		public Camera MainCamera;
 		public NetworkObject PlayerPrefab;
 		public NetworkObject HpBarPrefab;
 		public NetworkObject LocalPlayer { get; private set; }
@@ -24,11 +27,19 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
 		public Transform BlueTeamSpawnPoint;
 		public Transform RedTeamSpawnPoint;
+
+		[SerializeField] private GameObject _Hangar;
 		
-		public float SpawnRadius = 3f;
+		public float SpawnRadius = 5f;
 		[Networked, Capacity(8)]public NetworkDictionary<PlayerRef, Player> Players => default;
 		[Networked] private Player RoomOwner{get; set;}
 		[Networked] private bool SetTeam{get; set;} = false;
+		[Networked] public Team Winner { get; set;}
+		[Networked] private int BlueScore { get; set;} = 0;
+		[Networked] private int RedScore { get; set;} = 0;
+
+
+		private string _WinText;
 		
 		 //Singleton
     	public static GameManager Instance { get; private set; }
@@ -45,8 +56,11 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
             	Destroy(gameObject);
         	}
 
+
 			//trạng thái bắt đầu mặc định
 			State = GameState.Waiting;
+			_WinText = "";
+
 
 			//Khởi tạo người chơi
 			LocalPlayer = Runner.Spawn(PlayerPrefab, transform.position, Quaternion.identity, Runner.LocalPlayer);
@@ -86,23 +100,25 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
 				if (areAllReady)
 				{
-					State = GameState.Playing;
+					State = GameState.AllReady;
 				}
 			}
 		}
 
-		private void OnAllReady(){
+		private async void OnAllReady(){
+			
+			PlayerHub.Instance.SetReadyText("Take off!!", Color.green);
+
+			_Hangar.GetComponent<Animator>().Play("TakeOff");
+			await Task.Delay(800);
+
+			PlayerHub.Instance.SetFlash(true);
+			await Task.Delay(1000);
+
 			//chuẩn bị map
 			Map1.SetActive(true);
 			BlueTeamSpawnPoint = GameObject.FindGameObjectWithTag("BlueFlag").transform;
 			RedTeamSpawnPoint = GameObject.FindGameObjectWithTag("RedFlag").transform;
-		
-			//Set cam
-			MainCamera.clearFlags = CameraClearFlags.Skybox;
-
-			//Hiển thị chuyển trạng thái game
-			PlayerHub.Instance.SetPlaying();
-			
 
 			//Chuẩn bị người chơi
 			PreparePlayers();
@@ -112,6 +128,8 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
 			Cursor.lockState = CursorLockMode.Locked;
 			Cursor.visible = false;
+
+			State = GameState.Cooldown;
 		}
 
     	private void PreparePlayers()
@@ -172,24 +190,60 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 		private void GameStateChanged()
     	{
 			switch(State){
-				case GameState.Playing:
+				case GameState.Waiting:
+					_Hangar.SetActive(true);
+					break;
+
+				case GameState.AllReady:
 					OnAllReady();
+					break;
+
+				case GameState.Cooldown:
+					_Hangar.SetActive(false);
+					TelePlayer(_player);
+					StartCoroutine(StartCooldown());
+					break;
+
+				case GameState.Playing:
+					_player.State = Player.PlayerState.Active;
+					StopAllCoroutines();
 					break;
 				
 				case GameState.Win:
-					foreach (KeyValuePair<PlayerRef, Player> player in Players)
-					{
-						player.Value.State = Player.PlayerState.Rest;
-						player.Value.State = Player.PlayerState.Active;
-					}
-					break;
-			}
+					_player.State = Player.PlayerState.Rest;
+					
+					if(Winner == Team.Blue){
+						BlueScore++;
+						PlayerHub.Instance.SetScore(Team.Blue, BlueScore);
+						_WinText = "Blue Team Win! <br>";
 
-        	if(State == GameState.Playing){
-				OnAllReady();
+					} else {
+						RedScore++;
+						PlayerHub.Instance.SetScore(Team.Red, RedScore);
+						_WinText = "Red Team Win! <br>";
+
+					}
+
+					State = GameState.Cooldown;
+					break;
 			}
     	}
 
+		private IEnumerator StartCooldown()
+		{	
+			int time = 3;
+			while(time > 0){
+				PlayerHub.Instance.SetReadyText(_WinText + "Game will start in " + time + "s", Color.white);
+				yield return new WaitForSeconds(1);
+				time--;
+			}
+			PlayerHub.Instance.SetFlash(false);
+			//Hiển thị chuyển trạng thái game
+			PlayerHub.Instance.SetPlaying();
+
+			State = GameState.Playing; // Example state change after cooldown
+		}
+			
 		
 
 }

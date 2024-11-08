@@ -18,6 +18,9 @@ namespace Multiplayer
 		public bool IsRotateY;
 
 		public bool Fire;
+
+		private float _ClampMin;
+		private float _ClampMax;
 	}
 
 	/// <summary>
@@ -40,7 +43,7 @@ namespace Multiplayer
 
 		private void Update()
 		{	
-			if((GameManager.Instance.State == GameState.Waiting && Input.GetMouseButton(0))
+			if((GameManager.Instance.State != GameState.Playing && Input.GetMouseButton(0))
 				 || GameManager.Instance.State == GameState.Playing)
 
 				_input.LookRotationDelta = new Vector2(-Input.GetAxisRaw("Mouse Y"), Input.GetAxisRaw("Mouse X"));
@@ -75,8 +78,14 @@ namespace Multiplayer
 
 		private Vector2 ClampLookRotation(Vector2 lookRotation)
 		{
-			lookRotation.x = Mathf.Clamp(lookRotation.x, -30f, 70f);
-			return lookRotation;
+			if(GameManager.Instance.State == GameState.Waiting){
+				lookRotation.x = Mathf.Clamp(lookRotation.x, -10f, 27f);
+				return lookRotation;
+
+			} else {
+				lookRotation.x = Mathf.Clamp(lookRotation.x, -30f, 70f);
+				return lookRotation;
+			}
 		}
 	}
 }

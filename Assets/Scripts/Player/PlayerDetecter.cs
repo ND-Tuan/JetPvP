@@ -1,4 +1,3 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
@@ -8,34 +7,41 @@ using UnityEngine;
 
 public class PlayerDetecter : MonoBehaviour
 {
-    [SerializeField] float _Range;
-    [SerializeField] LayerMask _layer;
-    [SerializeField] private Collider[] _hitColliders = new Collider[8]; // collider trong phạm vi dò
-    private int _numColliders;
+    public float detectionRange = 10f;  // Phạm vi hiển thị
+    public LayerMask playerLayer;       // Lớp của người chơi để xác định mục tiêu
+    [SerializeField] private Collider[] detectedPlayers= new Collider[8]; // Bộ đệm để lưu trữ các collider trong tầm
+    
 
-    void Update()
-    {   
-        if(GameManager.Instance.State == GameState.Waiting) return;
-        _numColliders = Physics.OverlapSphereNonAlloc(transform.position, _Range, _hitColliders, _layer);
-        Array.Sort(_hitColliders, 0, _numColliders, Comparer<RaycastHit>.Create((a, b) => a.distance.CompareTo(b.distance)));
-        for (int i = 0; i < 8; i++)
+    private void Update()
+    {
+        // Đếm số collider của người chơi trong vùng
+        int numPlayersInRange = Physics.OverlapSphereNonAlloc(transform.position, detectionRange, detectedPlayers, playerLayer);
+        // Hiển thị người chơi trong tầm
+        for (int i = 0; i < numPlayersInRange; i++)
+        {   
+            UIInfoplate infoplate = detectedPlayers[i].GetComponentInChildren<UIInfoplate>();
+
+            Vector3 viewportPoint = Camera.main.WorldToViewportPoint(detectedPlayers[i].transform.position);
+            bool isInViewport = viewportPoint.z > 0 && viewportPoint.x > 0 && viewportPoint.x < 1 && viewportPoint.y > 0 && viewportPoint.y < 1;
+
+            if(infoplate !=null) infoplate.IsOnRange = isInViewport;
+        }
+
+        // Tắt hiển thị người chơi ngoài tầm
+        for (int i = numPlayersInRange; i < detectedPlayers.Length; i++)
         {
-            if(_hitColliders[i] != null){
-                if ( Vector3.Distance(transform.position, _hitColliders[i].transform.position) <= _Range)
-                {
-                    UIInfoplate infoplate =  _hitColliders[i].GetComponentInChildren<UIInfoplate>();
-                    if(infoplate !=null) infoplate.IsOnRange = true;
-                } else {
-                    UIInfoplate infoplate =  _hitColliders[i].GetComponentInChildren<UIInfoplate>();
-                    if(infoplate !=null) infoplate.IsOnRange = false;
-                }
-            } 
+            if (detectedPlayers[i] != null)
+            {
+                UIInfoplate infoplate = detectedPlayers[i].GetComponentInChildren<UIInfoplate>();
+                if(infoplate !=null) infoplate.IsOnRange = false;
+                detectedPlayers[i] = null; // Reset lại bộ đệm để tránh lỗi lần sau
+            }
         }
     }
 
-    // private void OnDrawGizmosSelected()
-    // {
-    //     Gizmos.color = Color.red;
-    //     Gizmos.DrawWireSphere(transform.position, _Range);
-    // }
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.red;
+        Gizmos.DrawWireSphere(transform.position, detectionRange);
+    }
 }

@@ -22,6 +22,9 @@ public class PlayerHub : MonoBehaviour
     [SerializeField] private GameObject HUBPanel;
     [SerializeField] private GameObject DeathPanel;
     [SerializeField] private TextMeshProUGUI CooldownText;
+    [SerializeField] private TextMeshProUGUI BlueScoreText;
+    [SerializeField] private TextMeshProUGUI RedScoreText;
+    [SerializeField] private Animator Flash;
     
     private List<Player> _PlayerList;
     private List<GameObject> _HpBarList;
@@ -39,10 +42,6 @@ public class PlayerHub : MonoBehaviour
         
         gameObject.SetActive(false);
         _PlayerList = new();
-    }
-
-    public void OnUndisplayHp(Player player){
-        
     }
 
     public void OnUpdateEnergyBar(float value, float maxValue, bool isRegen){
@@ -68,7 +67,28 @@ public class PlayerHub : MonoBehaviour
         GameManager.Instance._player.RPC_SetReady(true);
         ReadyMenu.SetActive(false);
         if(GameManager.Instance.State == GameState.Waiting)
-            _ReadyStateText.text = "Waiting for other players...";
+            SetReadyText("Waiting for other players...", Color.white);
+    }
+
+    public void SetReadyText(string text, Color color){
+        _ReadyStateText.color = color;
+        _ReadyStateText.text = text;
+    }
+
+    public void SetScore(Team team, int score){
+        if(team == Team.Blue){
+            BlueScoreText.text = score.ToString();
+        } else {
+            RedScoreText.text = score.ToString();
+        }
+    }
+
+    public void SetFlash(bool active){
+        if(active){
+            Flash.Play("Flash");
+        } else {
+            Flash.Play("FadeOut");
+        }
     }
 
     public void SetPlaying(){

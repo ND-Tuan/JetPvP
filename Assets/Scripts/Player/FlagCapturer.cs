@@ -9,22 +9,23 @@ public class FlagCapturer : MonoBehaviour
     [SerializeField]private GameObject BlueFlag;
     [SerializeField] private MeshRenderer DisplayOnMiniMap;
     [SerializeField] private Material[] materials = new Material[2];
-    private bool check;
-    private bool HasFlag = false;
+    public Team check;
+    public bool HasFlag = false;
     private GameObject OpponentFlag;
     private Flag flag;
 
 
     public void SetCapturer(Team team)
     {
-       check = team == Team.Blue;
-       OpponentFlag = check? RedFlag : BlueFlag;
-       DisplayOnMiniMap.material = materials[check? 0:1];
+        check = team;
+        
+        OpponentFlag = check == Team.Blue? RedFlag : BlueFlag;
+        DisplayOnMiniMap.material = materials[check == Team.Blue? 0:1];
     }
 
     void OnTriggerEnter(Collider other)
     {
-        if(other.CompareTag(check? "RedFlag" : "BlueFlag")){
+        if(other.CompareTag(check == Team.Blue? "RedFlag" : "BlueFlag")){
             flag = other.GetComponent<Flag>();
             flag.HasBeenCaptured = true;
             OpponentFlag.SetActive(true);
@@ -33,7 +34,7 @@ public class FlagCapturer : MonoBehaviour
             HasFlag = true;
         }
 
-        if(other.CompareTag(!check? "RedFlag" : "BlueFlag") && HasFlag){
+        if(other.CompareTag(check == Team.Red? "RedFlag" : "BlueFlag") && HasFlag){
 
         }
     }

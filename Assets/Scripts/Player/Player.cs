@@ -4,15 +4,12 @@ using Fusion;
 using Multiplayer;
 using Fusion.Addons.SimpleKCC;
 using UnityEngine.Rendering;
-using FusionHelpers;
-using Unity.VisualScripting;
 using System;
 using System.Collections.Generic;
-
+using System.Threading.Tasks;
 
 public sealed class Player : NetworkBehaviour
 {
-    
     [Header("Move")]
     public SimpleKCC KCC;
 	public PlayerInput PlayerInput;
@@ -38,7 +35,6 @@ public sealed class Player : NetworkBehaviour
     private float _rotationVelocity;
 
     [Header("Status")]
-   
     [SerializeField] private int _MaxHealth = 100;
     [SerializeField] private float _respawnTime;
     public enum PlayerState{
@@ -66,7 +62,7 @@ public sealed class Player : NetworkBehaviour
     [Header("Attack")]
     [SerializeField] private Transform _RaycastPoint;
     [SerializeField] private Transform _RaycastEnd;
-    private WeaponBase[] _attackers;
+    public WeaponBase[] _attackers;
     private Vector3 _currentDirection;
     public RaycastHit[] _hits = new RaycastHit[2];
     
@@ -79,20 +75,21 @@ public sealed class Player : NetworkBehaviour
 	private	Color Blue = new(0,152,255);
     [SerializeField] private NetworkObject DeathEffect;
     [SerializeField] private GameObject[] TeleportIn;
+    [SerializeField] private GameObject Wheel;
     
     private Vector3 _hitPosition;
     private Vector3 _hitNormal;
 
     [Networked, HideInInspector, Capacity(24), OnChangedRender(nameof(OnNicknameChanged))]
-	public string Nickname { get; set; }
-
-    
+	public string Nickname { get; set;}
 
     public override void Spawned()
     {
         Runner.SetIsSimulated(Object, true);
         _currentHealth = _MaxHealth;
         _currentEnergy = _MaxEnergy;
+
+        Wheel.SetActive(true);
 
         _animator = GetComponent<Animator>();
        
@@ -108,9 +105,8 @@ public sealed class Player : NetworkBehaviour
 
             //ẩn trong màn hình chuẩn bị
             foreach(WeaponBase attacker in _attackers){
-                attacker.gameObject.SetActive(false);
-            }
-            
+                attacker.transform.parent.gameObject.SetActive(false);
+            }       
         }
         //ẩn trong màn hình chuẩn bị
         infoplate.gameObject.SetActive(false);
@@ -120,7 +116,6 @@ public sealed class Player : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
 	{
-        
 		ProcessInput(PlayerInput.CurrentInput);
                 
         if(PlayerInput.CurrentInput.Fire){
@@ -129,12 +124,11 @@ public sealed class Player : NetworkBehaviour
             
 		PlayerInput.ResetInput();
 
-        if (Object.HasStateAuthority){
-
+        if (Object.HasStateAuthority && GameManager.Instance.State != GameState.Waiting){
             //Ngắm bắn và xoay về vị trí mục tiêu
-            foreach (var attacker in _attackers)
-            {
+            foreach (var attacker in _attackers){
                 attacker.SetRotation(Aim());
+                attacker.GetComponentInParent<Animator>().enabled = true;
             }
 			CheckRespawn();
 
@@ -145,28 +139,17 @@ public sealed class Player : NetworkBehaviour
 		}
 	}
 
-	public override void Render(){
+	public override void Render()
+    {
+        if(GameManager.Instance.State != GameState.Playing) return;
+        Wheel.SetActive(false);
 
-        if(GameManager.Instance.State == GameState.Waiting) return;
-
-        //Update lượng máu
-        if(!Object.HasInputAuthority){
-            infoplate.UpdateHP(_currentHealth, _MaxHealth);
-            return;
-        }
-        
         // Render hiệu ứng nghiêng máy bay 
         RotationJetWithMovement(PlayerInput.CurrentInput);
 
 		float smoothZTiltAngle = Mathf.SmoothDampAngle( _Model.localRotation.eulerAngles.z, -currentZTiltAngle, ref _zRotationVelocity, RotationSmoothTime);
         float smoothXTiltAngle = Mathf.SmoothDampAngle( _Model.localRotation.eulerAngles.x, currentXTiltAngle, ref _xRotationVelocity, RotationSmoothTime);
-        
-        // float CameraHandleXvalue = smoothZTiltAngle - _Model.localRotation.eulerAngles.z;
-        // if(Mathf.Abs(CameraHandleXvalue*0.1f)>10) CameraHandleXvalue = 0;
-        // float smoothXcam = Mathf.Lerp(CameraHandle.transform.localPosition.x , CameraHandleXvalue, Runner.DeltaTime*50);
-        
-        // CameraHandle.transform.localPosition = CameraHandle.transform.localPosition + new Vector3(-smoothXcam*0.1f, 0,0);
-        
+       
         _Model.localRotation = Quaternion.Euler(smoothXTiltAngle, 0, smoothZTiltAngle); 
 
         //Render vị trí CameraHandle
@@ -188,12 +171,6 @@ public sealed class Player : NetworkBehaviour
         // Xử lý cam
         CameraPivot.rotation = Quaternion.Euler(PlayerInput.CurrentInput.LookRotation);
 
-        //??? nhớ test lại
-		if (HasStateAuthority == false){
-            infoplate.UpdateHP(_currentHealth, _MaxHealth);
-            return;
-        } 
-
         //Xử lý hồi năng lượng
         if (!isRegenerating && _currentEnergy < _MaxEnergy && !PlayerInput.CurrentInput.SpeedUpEffect)
         {
@@ -208,9 +185,9 @@ public sealed class Player : NetworkBehaviour
 	}
 
     //=============Xử lý di chuyển=======================================
-
-	private void ProcessInput(GameplayInput input){
-		if(GameManager.Instance.State == GameState.Waiting) return;
+	private void ProcessInput(GameplayInput input)
+    {
+		if(GameManager.Instance.State != GameState.Playing) return;
 
         //Set tốc độ di chuyển
 		float speed = (input.Sprint && _currentEnergy > 1)? SprintSpeed : MoveSpeed;
@@ -252,7 +229,7 @@ public sealed class Player : NetworkBehaviour
         //tránh mất tốc đột ngột nếu có hiện tượng lag
         var desiredMoveVelocity = moveDirection * speed;
 		_moveVelocity = Vector3.Lerp(_moveVelocity, desiredMoveVelocity, 50 * Runner.DeltaTime);
-		KCC.Move(desiredMoveVelocity);
+		KCC.Move(_moveVelocity);
 	}
 
     //Coroutine hồi năng lượng
@@ -280,7 +257,8 @@ public sealed class Player : NetworkBehaviour
     }
 
     //Nghiêng máy bay 
-    private void RotationJetWithMovement(GameplayInput input){
+    private void RotationJetWithMovement(GameplayInput input)
+    {
         float targetZTiltAngle = 0f;
         float targetXTiltAngle = 0f;
 
@@ -306,7 +284,8 @@ public sealed class Player : NetworkBehaviour
     }
 
     //Kiểm tra va chạm (chưa fix được bug collider của KCC không hoạt động T_T, dùng tạm )
-    private bool CheckCollisonWithTerrian(Vector3 diraction){
+    private bool CheckCollisonWithTerrian(Vector3 diraction)
+    {
         if(Physics.Raycast(transform.position, diraction, out _hit, 1, _MapLayer)){
             return true;
         }
@@ -317,7 +296,8 @@ public sealed class Player : NetworkBehaviour
     //=============Xử lý hiển thị=======================================
 
     //Hiệu ứng tăng tốc
-    private void SpeepUpEffect(bool isSprint){
+    private void SpeepUpEffect(bool isSprint)
+    {
         if(!Object.HasInputAuthority) return;
         if(isSprint){
             //Tạo hiệu ứng tăng tốc
@@ -334,7 +314,8 @@ public sealed class Player : NetworkBehaviour
     }
 
     //Hiệu ứng rung camera
-    private Vector3 GetCameraShakeOffset(){
+    private Vector3 GetCameraShakeOffset()
+    {
         float shakeAmount = 0.05f; 
         return new Vector3(
             UnityEngine.Random.Range(-shakeAmount, shakeAmount),
@@ -344,8 +325,9 @@ public sealed class Player : NetworkBehaviour
     }
 
     //Hiển thị máu
-    private void UpdateHpDisplay(){
-        if(GameManager.Instance.State == GameState.Waiting) return;
+    private void UpdateHpDisplay()
+    {
+        if(GameManager.Instance.State != GameState.Playing) return;
         infoplate.UpdateHP(_currentHealth, _MaxHealth);
         _HpDisplay.UpdateHP(_currentHealth, _MaxHealth);
 
@@ -354,8 +336,8 @@ public sealed class Player : NetworkBehaviour
     }
 
     //Hiển thị tên người chơi
-    private void OnNicknameChanged(){
-
+    private void OnNicknameChanged()
+    {
 		if (HasStateAuthority){
             return; // Chỉ hiển thị tên của người chơi khác
         }
@@ -364,21 +346,23 @@ public sealed class Player : NetworkBehaviour
 	}
 
     //Tắt hiển thị
-    private void OnVisualToggle(){
+    private void OnVisualToggle()
+    {
         _Model.gameObject.SetActive(VisualToggle);
 
         if(!Object.HasStateAuthority)
             infoplate.gameObject.SetActive(VisualToggle);
 
         foreach(WeaponBase attacker in _attackers){
-            attacker.gameObject.SetActive(VisualToggle);
+            attacker.transform.parent.gameObject.SetActive(VisualToggle);
         }
     }
 
     //==================================================================
     //=============Xử lý tấn công=======================================
     //Ngắm bắn
-    private Vector3 Aim(){
+    private Vector3 Aim()
+    {
         int num = Physics.RaycastNonAlloc(_RaycastPoint.position, CameraHandle.forward, _hits, 300, _HitMask);
         Array.Sort(_hits, 0, num, Comparer<RaycastHit>.Create((a, b) => a.distance.CompareTo(b.distance)));
         for (int i = 0; i < num; i++)
@@ -401,12 +385,11 @@ public sealed class Player : NetworkBehaviour
         }
     }
 
-
     //==================================================================
     //=============Xử lý sát thương=====================================
     [Rpc(RpcSources.All, RpcTargets.All)]
-    public void RPC_TakeDamage(int damage){
-
+    public void RPC_TakeDamage(int damage)
+    {
         if(State == PlayerState.Death) return;
 
         _currentHealth -= damage;
@@ -418,9 +401,11 @@ public sealed class Player : NetworkBehaviour
 
     //===================================================================
     //============Xử lý trạng thái=======================================
-    private void OnStateChange(){
+    private async void OnStateChange()
+    {
         switch(State){
             case PlayerState.Active:
+                VisualToggle = false;
                 if(Object.HasStateAuthority)
                     PlayerHub.Instance.SetStatusDisplay(true);
 
@@ -430,8 +415,14 @@ public sealed class Player : NetworkBehaviour
                 _currentHealth = _MaxHealth;
                 _currentEnergy = _MaxEnergy;
 
+                GetComponentInChildren<FlagCapturer>().DropFlag();
+
                 respawnTimer = TickTimer.CreateFromSeconds(Runner, 1);
 		        NoDamageTimer = TickTimer.CreateFromSeconds(Runner, 1);
+
+                await Task.Delay(500);
+                VisualToggle = true;
+
                 break;
 
             case PlayerState.Death:
@@ -444,8 +435,6 @@ public sealed class Player : NetworkBehaviour
 
                 _respawnInSeconds = _respawnTime;
 
-                //rơi cờ
-                GetComponentInChildren<FlagCapturer>().DropFlag();
                 break;
         }
     }
@@ -477,7 +466,6 @@ public sealed class Player : NetworkBehaviour
 			}
 		}
 	}
-
 
     // đưa người chơi vào trạng thái sẵn sàng
     [Rpc(RpcSources.All, RpcTargets.All)]
