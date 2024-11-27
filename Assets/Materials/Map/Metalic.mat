@@ -200,13 +200,13 @@ Material:
     - _ZWrite: 1
     m_Colors:
     - _BASE_COLOR: {r: 1, g: 1, b: 1, a: 1}
-    - _BaseColor: {r: 0.5943396, g: 0.016315207, b: 0, a: 0.8509804}
-    - _Color: {r: 0.5943396, g: 0.016315207, b: 0, a: 0.8509804}
+    - _BaseColor: {r: 0.5943396, g: 0.016315207, b: 0, a: 1}
+    - _Color: {r: 0.5943396, g: 0.016315207, b: 0, a: 1}
     - _EMISSION_COLOR: {r: 0, g: 0, b: 0, a: 0}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
     - _HueVariation: {r: 1, g: 0.5, b: 0, a: 0.1}
     - _REFLECTIONS_COLOR: {r: 1, g: 1, b: 1, a: 1}
-    - _SpecColor: {r: 8, g: 2.854902, b: 0.31636998, a: 1}
+    - _SpecColor: {r: 2.0656288, g: 0.68854296, b: 0, a: 1}
     - _Specular: {r: 0, g: 0, b: 0, a: 0}
     - _UvOffset: {r: 0, g: 0, b: 0, a: 0}
     - _UvTiling: {r: 1, g: 1, b: 0, a: 0}

@@ -18,9 +18,7 @@ namespace Multiplayer
 		public bool IsRotateY;
 
 		public bool Fire;
-
-		private float _ClampMin;
-		private float _ClampMax;
+		public bool FireMissile;
 	}
 
 	/// <summary>
@@ -38,11 +36,14 @@ namespace Multiplayer
 			_input.Jump = false;
 			_input.Sprint = false;
 			_input.HightValue = 0;
-			_input.Fire = false;
+			//_input.Fire = false;
+			//_input.FireMissile = false;
 		}
 
 		private void Update()
 		{	
+			if(GameManager.Instance.State == GameState.AllReady) return;
+			
 			if((GameManager.Instance.State != GameState.Playing && Input.GetMouseButton(0))
 				 || GameManager.Instance.State == GameState.Playing)
 
@@ -50,8 +51,8 @@ namespace Multiplayer
 				_input.LookRotation = ClampLookRotation(_input.LookRotation + _input.LookRotationDelta);
 			
 			// Accumulate input only if the cursor is locked.
-			if (Cursor.lockState != CursorLockMode.Locked || GameManager.Instance._player.State == global::Player.PlayerState.Death)
-				return;
+			if (Cursor.lockState != CursorLockMode.Locked) return;
+			if (GameManager.Instance._player.State != global::Player.PlayerState.Active) return;
 
 			// Accumulate input from Keyboard/Mouse. Input accumulation is mandatory (at least for look rotation here) as Update can be
 			// called multiple times before next FixedUpdateNetwork is called - common if rendering speed is faster than Fusion simulation.
@@ -73,6 +74,7 @@ namespace Multiplayer
 
 
 			_input.Fire = Input.GetMouseButton(0);
+			_input.FireMissile = Input.GetKeyDown(KeyCode.Space);
 
 		}
 

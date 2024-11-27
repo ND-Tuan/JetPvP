@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Collections;
 using System.Threading.Tasks;
+using Fusion.Async;
 
 public enum GameState
 {
@@ -11,12 +12,13 @@ public enum GameState
 	AllReady,
 	Cooldown,
     Playing,
-	Win,
+	Win
 }
 
 public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 	{
-		[Networked, OnChangedRender(nameof(GameStateChanged))] public GameState State { get; set; }	= GameState.Waiting;	
+		[Networked, OnChangedRender(nameof(GameStateChanged))] public GameState State { get; set; }	= GameState.Waiting;
+		public int ScoreToWin = 3;	
 		public GameObject Map1;
 		public NetworkObject PlayerPrefab;
 		public NetworkObject HpBarPrefab;
@@ -25,26 +27,23 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 		private List<GameObject> PlayerList;
 		public Player _player;
 
-		public Transform BlueTeamSpawnPoint;
-		public Transform RedTeamSpawnPoint;
+		[Networked] public Vector3 BlueTeamSpawnPoint{get; set;}
+		[Networked] public Vector3 RedTeamSpawnPoint{get; set;}
 
 		[SerializeField] private GameObject _Hangar;
 		
 		public float SpawnRadius = 5f;
 		[Networked, Capacity(8)]public NetworkDictionary<PlayerRef, Player> Players => default;
-		[Networked] private Player RoomOwner{get; set;}
 		[Networked] private bool SetTeam{get; set;} = false;
 		[Networked] public Team Winner { get; set;}
-		[Networked] private int BlueScore { get; set;} = 0;
-		[Networked] private int RedScore { get; set;} = 0;
-
-
-		private string _WinText;
+		[Networked, OnChangedRender(nameof(OnScoreChange))] public int BlueScore { get; private set;} = 0;
+		[Networked, OnChangedRender(nameof(OnScoreChange))] public int RedScore { get; private set;} = 0;
+		[Networked] public TickTimer _cooldown { get; set; }
+		[Networked]	public TickTimer GameOverTimer { get; set; }
 		
 		 //Singleton
     	public static GameManager Instance { get; private set; }
 		
-
 		public override void Spawned()
 		{
 			 //triển khai Singleton
@@ -59,14 +58,14 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
 			//trạng thái bắt đầu mặc định
 			State = GameState.Waiting;
-			_WinText = "";
-
 
 			//Khởi tạo người chơi
 			LocalPlayer = Runner.Spawn(PlayerPrefab, transform.position, Quaternion.identity, Runner.LocalPlayer);
+			
 			HpBar = Runner.Spawn(HpBarPrefab, transform.position, Quaternion.identity, Runner.LocalPlayer);
 
 			_player = LocalPlayer.GetComponent<Player>();
+			Runner.SetPlayerObject(Runner.LocalPlayer, _player.Object);
 
 			_player._HpDisplay = HpBar.GetComponent<HpBarDisplay>();
 			_player.RPC_SetReady(false);
@@ -75,7 +74,6 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 			Players.Add(LocalPlayer.StateAuthority, _player);
 			PlayerHub.Instance.gameObject.SetActive(true);
 			
-			if(Players.Count() == 1) RoomOwner = _player;
 
 			//PlayerHub.Instance.OnDiplayHp(Players);
 		}
@@ -86,7 +84,7 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 				return;
 			
 			//Kiểm tra trạng thái sẵn sàng
-			if (State == GameState.Waiting && _player == RoomOwner)
+			if (State == GameState.Waiting && Runner.IsSharedModeMasterClient)
 			{
 				bool areAllReady = true;
 				foreach (KeyValuePair<PlayerRef, Player> player in Players)
@@ -101,13 +99,40 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 				if (areAllReady)
 				{
 					State = GameState.AllReady;
+					_cooldown = TickTimer.CreateFromSeconds(Runner, 1.8f);
 				}
+			}
+
+			if (GameOverTimer.Expired(Runner))
+			{
+			
+				if(Runner.IsSharedModeMasterClient){
+					if (Winner == Team.Blue ) BlueScore++;
+					if (Winner == Team.Red ) RedScore++;
+				}		
+
+				// Restart the game
+				Winner = default;
+				GameOverTimer = default;
+
+				if (BlueScore >= ScoreToWin || RedScore >= ScoreToWin){
+					return;
+				}
+
+				// Prepare players for next round
+				RPC_RespawnPlayer();
+				
+
+				Cursor.lockState = CursorLockMode.Locked;
+				Cursor.visible = false;
+
+				PlayerHub.Instance.SetReadyText("", Color.green, false);
 			}
 		}
 
 		private async void OnAllReady(){
 			
-			PlayerHub.Instance.SetReadyText("Take off!!", Color.green);
+			PlayerHub.Instance.SetReadyText("Take off!!", Color.green, false);
 
 			_Hangar.GetComponent<Animator>().Play("TakeOff");
 			await Task.Delay(800);
@@ -117,11 +142,8 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
 			//chuẩn bị map
 			Map1.SetActive(true);
-			BlueTeamSpawnPoint = GameObject.FindGameObjectWithTag("BlueFlag").transform;
-			RedTeamSpawnPoint = GameObject.FindGameObjectWithTag("RedFlag").transform;
-
-			//Chuẩn bị người chơi
-			PreparePlayers();
+			BlueTeamSpawnPoint = GameObject.FindGameObjectWithTag("BlueFlag").transform.position;
+			RedTeamSpawnPoint = GameObject.FindGameObjectWithTag("RedFlag").transform.position;
 
 			//Khóa phòng
 			Runner.SessionInfo.IsOpen = false;
@@ -129,7 +151,12 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 			Cursor.lockState = CursorLockMode.Locked;
 			Cursor.visible = false;
 
-			State = GameState.Cooldown;
+			if(Runner.IsSharedModeMasterClient){
+				State = GameState.Cooldown;
+				//Chuẩn bị người chơi
+				PreparePlayers();
+			}
+				
 		}
 
     	private void PreparePlayers()
@@ -139,19 +166,24 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 				//chuyển người chơi sang trạng thái chơi
 				player.Value.RPC_StartGame(SetTeam? Team.Blue : Team.Red);
 				SetTeam = !SetTeam;
+				
 
 				//Đưa người chơi về vị trí mỗi đội
-        		TelePlayer(player.Value);
+				TelePlayer(player.Value);
 			}
+			
     	}
 
 		private void TelePlayer(Player player){
-        	var SpawnPoint = player.MyTeam == Team.Blue?   BlueTeamSpawnPoint : RedTeamSpawnPoint;
-                                          
-			var randomPositionOffset = Random.insideUnitCircle * SpawnRadius;
-			var spawnPosition = SpawnPoint.position + new Vector3(randomPositionOffset.x, transform.position.y, randomPositionOffset.y);
+			
+				var SpawnPoint = player.MyTeam == Team.Blue?   BlueTeamSpawnPoint : RedTeamSpawnPoint;
+				
+				Quaternion spawnRotation = Quaternion.LookRotation(SpawnPoint - transform.position);
+				var randomPositionOffset = Random.insideUnitCircle * SpawnRadius;
+				var spawnPosition = SpawnPoint + new Vector3(randomPositionOffset.x, transform.position.y, randomPositionOffset.y);
 
-			player.Teleport(spawnPosition, SpawnPoint.rotation);
+				player.Teleport(spawnPosition, spawnRotation);
+			
 		}
 
     	public void PlayerJoined(PlayerRef player)
@@ -162,13 +194,6 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 		public void PlayerLeft(PlayerRef player)
 		{
 			Players.Remove(player);
-
-			//đổi chủ phòng
-			foreach (KeyValuePair<PlayerRef, Player> playerScript in Players)
-			{   
-				RoomOwner = playerScript.Value;
-				break;
-			}
 		}
 
 		private void  UpdatePlayerList(){
@@ -187,8 +212,26 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 
 		}
 
+		private void ChangePlayersState(Player.PlayerState state)
+		{
+			foreach (KeyValuePair<PlayerRef, Player> player in Players)
+			{
+				player.Value.State = state;
+			}
+		}
+
+		private void OnScoreChange(){
+			PlayerHub.Instance.SetScore(Team.Blue, BlueScore);
+			PlayerHub.Instance.SetScore(Team.Red, RedScore);
+
+			if ((BlueScore >= ScoreToWin || RedScore >= ScoreToWin) && Runner.IsSharedModeMasterClient){
+				State = GameState.Win;
+			}
+		}
+
 		private void GameStateChanged()
     	{
+			
 			switch(State){
 				case GameState.Waiting:
 					_Hangar.SetActive(true);
@@ -205,26 +248,13 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 					break;
 
 				case GameState.Playing:
-					_player.State = Player.PlayerState.Active;
+					ChangePlayersState(Player.PlayerState.Active);
 					StopAllCoroutines();
 					break;
-				
 				case GameState.Win:
-					_player.State = Player.PlayerState.Rest;
-					
-					if(Winner == Team.Blue){
-						BlueScore++;
-						PlayerHub.Instance.SetScore(Team.Blue, BlueScore);
-						_WinText = "Blue Team Win! <br>";
-
-					} else {
-						RedScore++;
-						PlayerHub.Instance.SetScore(Team.Red, RedScore);
-						_WinText = "Red Team Win! <br>";
-
-					}
-
-					State = GameState.Cooldown;
+					float ratio = (float)(BlueScore - RedScore) / ScoreToWin;
+					ratio = (float)System.Math.Round(ratio, 2);
+					PlayerHub.Instance.DisplayFinalWin(ratio);
 					break;
 			}
     	}
@@ -233,17 +263,27 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 		{	
 			int time = 3;
 			while(time > 0){
-				PlayerHub.Instance.SetReadyText(_WinText + "Game will start in " + time + "s", Color.white);
-				yield return new WaitForSeconds(1);
+				PlayerHub.Instance.SetReadyText("Game will start in " + time + "s", Color.white, false);
+
+				if(Runner.IsSharedModeMasterClient)
+					_cooldown = TickTimer.CreateFromSeconds(Runner, 1);
+					
+				yield return new WaitUntil(() => _cooldown.Expired(Runner));
 				time--;
 			}
 			PlayerHub.Instance.SetFlash(false);
 			//Hiển thị chuyển trạng thái game
 			PlayerHub.Instance.SetPlaying();
 
-			State = GameState.Playing; // Example state change after cooldown
+			if(Runner.IsSharedModeMasterClient){
+				State = GameState.Playing;
+			}
 		}
-			
 		
+		[Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+		private void RPC_RespawnPlayer()
+		{
+			_player.Respawn();
+		}
 
 }

@@ -9,9 +9,9 @@ using UnityEngine;
 	public class Weapon_Hitscan : WeaponBase
 	{
 		// PRIVATE MEMBERS
-
 		[SerializeField]private NetworkObject _dummyProjectilePrefab;
 		[Networked] private int _fireCount { get; set; }
+		[Networked] private TickTimer _cooldownTimer{ get; set; }
 		[Networked, Capacity(100)] private Vector3 _hitPosition { get; set; }
 		[SerializeField] private int _damage;
 		[SerializeField] LayerMask _layer;
@@ -23,28 +23,20 @@ using UnityEngine;
 
 		public override void Fire()
 		{
-			if(Cooldown.IsCoolingDown) return;
-			int _numColliders = Physics.OverlapSphereNonAlloc(HitPoint, 1f, _hitColliders, _layer);
-			if(_numColliders>0){
-				GameObject other = _hitColliders[0].gameObject;
-				if (other)
-				{
-					Player target = other.GetComponent<Player>();
-					if (target != null)
-					{
-						target.RPC_TakeDamage(_damage);
-					}
-				}
+			if(_cooldownTimer.ExpiredOrNotRunning(Runner)) {
+
+				_hitPosition = HitPoint;
+				_fireCount++;
+				_cooldownTimer = TickTimer.CreateFromSeconds(Runner, Cooldown);
+
+				int _numColliders = Physics.OverlapSphereNonAlloc(HitPoint, 1f, _hitColliders, _layer);
+				if(_numColliders<=0) return;
+
+				Player target = _hitColliders[0].gameObject.GetComponent<Player>();
+				if (target == null) return;
+				
+				target.RPC_TakeDamage(_damage);
 			}
-
-			_hitPosition = HitPoint;
-
-
-
-			// In this example projectile count property (fire count) is used not only for weapon fire effects
-			// but to spawn the projectile visuals themselves.
-			_fireCount++;
-			Cooldown.StartCooldown();
 		}
 
 		public override void Spawned()

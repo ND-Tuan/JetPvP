@@ -65,7 +65,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 90d2da011a2e8134c9af98076f1e0bd0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _speed: 100
+  _speed: 150
   _maxDistance: 100
   _hitEffectPrefab: {fileID: 3720729794178000109, guid: e68cc0bdd8fda4c49ad9e22247c67275,
     type: 3}

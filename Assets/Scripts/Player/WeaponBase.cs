@@ -8,11 +8,11 @@ using Fusion;
 		// PUBLIC MEMBERS
 
 		protected Transform FireTransform => _fireTransform;
-		protected Cooldown Cooldown => _cooldown;
+		protected float Cooldown => _cooldown;
 		protected Vector3 HitPoint => _hitPoint;
 
 		// PRIVATE MEMBERS
-		[SerializeField] private Cooldown _cooldown;
+		[SerializeField] private float _cooldown;
     	[SerializeField] private ParticleSystem _particle;
 
 		[SerializeField]
@@ -24,6 +24,7 @@ using Fusion;
 
 		private AudioSource[] _fireSoundSources;
 		private Vector3 _hitPoint;
+		
 
 		// PUBLIC METHODS
 

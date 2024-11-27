@@ -21,12 +21,13 @@ public class Flag : NetworkBehaviour
     public override void Spawned()
     {
        HasBeenCaptured = false;
+        GetComponentInChildren<ParticleSystem>().Play();
     }
 
     void Awake()
     {
         rotateObjects = GetComponentsInChildren<RotateObject>();
-        
+       
     }
 
     private void OnTriggerEnter(Collider other)
@@ -38,7 +39,17 @@ public class Flag : NetworkBehaviour
             
             if(capturer.HasFlag && _flagType == capturer.check){
                 GameManager.Instance.Winner = _flagType;
-                GameManager.Instance.State = GameState.Win;
+
+
+                if(_flagType == Team.Blue)
+                    PlayerHub.Instance.SetReadyText("Blue Team Win", Color.blue, true);
+                else
+                    PlayerHub.Instance.SetReadyText("Red Team Win", Color.red, true );
+
+                GameManager.Instance.GameOverTimer = TickTimer.CreateFromSeconds(Runner, 0.5f);
+                
+                Cursor.lockState = CursorLockMode.None;
+				Cursor.visible = true;
             }
         }
     }

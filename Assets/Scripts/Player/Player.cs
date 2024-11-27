@@ -4,7 +4,6 @@ using Fusion;
 using Multiplayer;
 using Fusion.Addons.SimpleKCC;
 using UnityEngine.Rendering;
-using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -17,7 +16,6 @@ public sealed class Player : NetworkBehaviour
     [SerializeField] private float SprintSpeed = 5.335f;
     [SerializeField] private float _MaxEnergy = 100f;
     [SerializeField] private float _currentEnergy;
-    [SerializeField] private float _energyRegenRate = 20f;
     private bool isRegenerating = false; 
     private Vector3 _moveVelocity;
     [SerializeField] private LayerMask _MapLayer;
@@ -58,13 +56,6 @@ public sealed class Player : NetworkBehaviour
     [SerializeField]private Transform CameraPivot;
     [SerializeField]private Transform CameraHandle; 
     private GameObject _mainCamera;
-
-    [Header("Attack")]
-    [SerializeField] private Transform _RaycastPoint;
-    [SerializeField] private Transform _RaycastEnd;
-    public WeaponBase[] _attackers;
-    private Vector3 _currentDirection;
-    public RaycastHit[] _hits = new RaycastHit[2];
     
     [Header("Visual")]
     private Animator _animator;
@@ -85,7 +76,9 @@ public sealed class Player : NetworkBehaviour
 
     public override void Spawned()
     {
-        Runner.SetIsSimulated(Object, true);
+        //GameManager.Instance.Players.Add(Object.StateAuthority, this);
+
+        //Runner.SetIsSimulated(Object, true);
         _currentHealth = _MaxHealth;
         _currentEnergy = _MaxEnergy;
 
@@ -93,7 +86,6 @@ public sealed class Player : NetworkBehaviour
 
         _animator = GetComponent<Animator>();
        
-        _attackers = GetComponentsInChildren<WeaponBase>();
         _mainCamera = Camera.main.gameObject;
         
         Nickname = PlayerPrefs.GetString("PlayerName");
@@ -101,12 +93,7 @@ public sealed class Player : NetworkBehaviour
         _respawnInSeconds = 0;
 
         if(!Object.HasStateAuthority){
-            GetComponentInChildren<Camera>().enabled = false;
-
-            //ẩn trong màn hình chuẩn bị
-            foreach(WeaponBase attacker in _attackers){
-                attacker.transform.parent.gameObject.SetActive(false);
-            }       
+            GetComponentInChildren<Camera>().enabled = false;     
         }
         //ẩn trong màn hình chuẩn bị
         infoplate.gameObject.SetActive(false);
@@ -116,20 +103,11 @@ public sealed class Player : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
 	{
-		ProcessInput(PlayerInput.CurrentInput);
+	
+        if (Object.HasStateAuthority && GameManager.Instance.State == GameState.Playing){
+            ProcessInput(PlayerInput.CurrentInput);
                 
-        if(PlayerInput.CurrentInput.Fire){
-            Shoot();
-        }
-            
-		PlayerInput.ResetInput();
-
-        if (Object.HasStateAuthority && GameManager.Instance.State != GameState.Waiting){
-            //Ngắm bắn và xoay về vị trí mục tiêu
-            foreach (var attacker in _attackers){
-                attacker.SetRotation(Aim());
-                attacker.GetComponentInParent<Animator>().enabled = true;
-            }
+		    PlayerInput.ResetInput();
 			CheckRespawn();
 
 			if (isTeleportDone && respawnTimer.Expired(Runner)){
@@ -144,6 +122,7 @@ public sealed class Player : NetworkBehaviour
         if(GameManager.Instance.State != GameState.Playing) return;
         Wheel.SetActive(false);
 
+        if(!Object.HasStateAuthority) return;
         // Render hiệu ứng nghiêng máy bay 
         RotationJetWithMovement(PlayerInput.CurrentInput);
 
@@ -168,13 +147,17 @@ public sealed class Player : NetworkBehaviour
 
 	private void LateUpdate()
 	{
+        if (HasStateAuthority == false) return;
         // Xử lý cam
         CameraPivot.rotation = Quaternion.Euler(PlayerInput.CurrentInput.LookRotation);
 
         //Xử lý hồi năng lượng
         if (!isRegenerating && _currentEnergy < _MaxEnergy && !PlayerInput.CurrentInput.SpeedUpEffect)
         {
-            StartCoroutine(RegenerateEnergy());  // Bắt đầu coroutine để hồi thể lực
+            //Bắt đầu hồi năng lượng
+            _currentEnergy += 1;
+            //Đảm bảo không vượt quá max
+            if( _currentEnergy > _MaxEnergy)_currentEnergy = _MaxEnergy;
         }
 
         //hiển thị
@@ -194,7 +177,7 @@ public sealed class Player : NetworkBehaviour
 
         //cho phép tăng tốc nếu đủ năng lượng (chỉ bắt đầu hồi khi người chơi nhả nút tăng tốc)
         if(input.SpeedUpEffect && _currentEnergy > 0){
-           _currentEnergy -= 8 * Time.deltaTime;
+           _currentEnergy -= 0.25f;
            if(_currentEnergy < 0) _currentEnergy = 0;
            isRegenerating = true;
 
@@ -246,10 +229,8 @@ public sealed class Player : NetworkBehaviour
         // Bắt đầu hồi thể lực
         while (_currentEnergy < _MaxEnergy)
         {
-            _currentEnergy += _energyRegenRate * Time.deltaTime;
-            
+            _currentEnergy += 0.4f;
             if(!isRegenerating == false) break;
-
             yield return null;  // Chờ 1 frame trước khi tiếp tục hồi
         }
          //Đảm bảo không vượt quá max
@@ -294,7 +275,6 @@ public sealed class Player : NetworkBehaviour
 
     //==================================================================
     //=============Xử lý hiển thị=======================================
-
     //Hiệu ứng tăng tốc
     private void SpeepUpEffect(bool isSprint)
     {
@@ -353,35 +333,8 @@ public sealed class Player : NetworkBehaviour
         if(!Object.HasStateAuthority)
             infoplate.gameObject.SetActive(VisualToggle);
 
-        foreach(WeaponBase attacker in _attackers){
+        foreach(WeaponBase attacker in GetComponent<DroneManager>()._attackers){
             attacker.transform.parent.gameObject.SetActive(VisualToggle);
-        }
-    }
-
-    //==================================================================
-    //=============Xử lý tấn công=======================================
-    //Ngắm bắn
-    private Vector3 Aim()
-    {
-        int num = Physics.RaycastNonAlloc(_RaycastPoint.position, CameraHandle.forward, _hits, 300, _HitMask);
-        Array.Sort(_hits, 0, num, Comparer<RaycastHit>.Create((a, b) => a.distance.CompareTo(b.distance)));
-        for (int i = 0; i < num; i++)
-        {
-            // Kiểm tra collider của hit không phải của người chơi
-            if (_hits[i].collider != GetComponent<Collider>())
-            {
-                return  _hits[i].point; // Thoát khi tìm thấy hit mong muốn
-            }
-        }
-        
-        return CameraHandle.forward*300 ;
-    }
-
-    private void Shoot()
-    {   
-        foreach (var attack in _attackers)
-        {
-            attack.Fire();
         }
     }
 
@@ -415,8 +368,7 @@ public sealed class Player : NetworkBehaviour
                 _currentHealth = _MaxHealth;
                 _currentEnergy = _MaxEnergy;
 
-                GetComponentInChildren<FlagCapturer>().DropFlag();
-
+                
                 respawnTimer = TickTimer.CreateFromSeconds(Runner, 1);
 		        NoDamageTimer = TickTimer.CreateFromSeconds(Runner, 1);
 
@@ -429,6 +381,8 @@ public sealed class Player : NetworkBehaviour
                 VisualToggle = false;
                 if(Object.HasStateAuthority)
                     PlayerHub.Instance.SetStatusDisplay(false);
+
+                GetComponentInChildren<FlagCapturer>().DropFlag();
 
                 NetworkObject Explosion = Runner.Spawn(DeathEffect, transform.position, transform.rotation, Object.InputAuthority);
                 Explosion.GetComponent<ParticleSystem>().Play();
@@ -449,7 +403,8 @@ public sealed class Player : NetworkBehaviour
 			if (_respawnInSeconds <= 0)
 			{
                 //lấy điểm spawn
-				Transform spawnpt = MyTeam == Team.Blue? GameManager.Instance.BlueTeamSpawnPoint : GameManager.Instance.RedTeamSpawnPoint;
+				Vector3 spawnpt = MyTeam == Team.Blue? GameManager.Instance.BlueTeamSpawnPoint : GameManager.Instance.RedTeamSpawnPoint;
+                Quaternion spawnRot = Quaternion.Euler(0, MyTeam == Team.Blue? 0 : 180, 0);
 				if (spawnpt == null){
 					_respawnInSeconds = Runner.DeltaTime;
 					return;
@@ -458,7 +413,7 @@ public sealed class Player : NetworkBehaviour
 				_respawnInSeconds = -1;
 				
                 //đưa lại người chơi về điểm spawn
-				Teleport( spawnpt.position, spawnpt.rotation );
+                Teleport( spawnpt + new Vector3(Random.insideUnitCircle.x, 0, Random.insideUnitCircle.y) * 10, spawnRot );
 
                 //tái kích hoạt
                 State = PlayerState.Active;
@@ -466,6 +421,14 @@ public sealed class Player : NetworkBehaviour
 			}
 		}
 	}
+
+    public void Respawn(){
+        _respawnInSeconds = 1;
+        VisualToggle = false;
+        GetComponentInChildren<FlagCapturer>().DropFlag();
+        State = PlayerState.Rest;
+
+    }
 
     // đưa người chơi vào trạng thái sẵn sàng
     [Rpc(RpcSources.All, RpcTargets.All)]

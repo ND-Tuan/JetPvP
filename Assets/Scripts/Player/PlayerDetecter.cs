@@ -1,6 +1,8 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Data.Common;
+using Fusion;
 using Multiplayer;
 using Unity.VisualScripting;
 using UnityEngine;
@@ -8,33 +10,27 @@ using UnityEngine;
 public class PlayerDetecter : MonoBehaviour
 {
     public float detectionRange = 10f;  // Phạm vi hiển thị
-    public LayerMask playerLayer;       // Lớp của người chơi để xác định mục tiêu
-    [SerializeField] private Collider[] detectedPlayers= new Collider[8]; // Bộ đệm để lưu trữ các collider trong tầm
+    private Vector3 viewportPoint;
     
-
+    
     private void Update()
     {
-        // Đếm số collider của người chơi trong vùng
-        int numPlayersInRange = Physics.OverlapSphereNonAlloc(transform.position, detectionRange, detectedPlayers, playerLayer);
-        // Hiển thị người chơi trong tầm
-        for (int i = 0; i < numPlayersInRange; i++)
-        {   
-            UIInfoplate infoplate = detectedPlayers[i].GetComponentInChildren<UIInfoplate>();
-
-            Vector3 viewportPoint = Camera.main.WorldToViewportPoint(detectedPlayers[i].transform.position);
-            bool isInViewport = viewportPoint.z > 0 && viewportPoint.x > 0 && viewportPoint.x < 1 && viewportPoint.y > 0 && viewportPoint.y < 1;
-
-            if(infoplate !=null) infoplate.IsOnRange = isInViewport;
-        }
-
-        // Tắt hiển thị người chơi ngoài tầm
-        for (int i = numPlayersInRange; i < detectedPlayers.Length; i++)
+        foreach (KeyValuePair<PlayerRef, Player> player in GameManager.Instance.Players)
         {
-            if (detectedPlayers[i] != null)
+            if (player.Value == null) continue;
+            if (player.Value == GameManager.Instance._player) continue;
+
+            float distance = Vector3.Distance(player.Value.transform.position, transform.position);
+            UIInfoplate infoplate = player.Value.GetComponentInChildren<UIInfoplate>();
+
+            if (distance <= detectionRange)
             {
-                UIInfoplate infoplate = detectedPlayers[i].GetComponentInChildren<UIInfoplate>();
-                if(infoplate !=null) infoplate.IsOnRange = false;
-                detectedPlayers[i] = null; // Reset lại bộ đệm để tránh lỗi lần sau
+                viewportPoint = Camera.main.WorldToViewportPoint(player.Value.transform.position);   
+                bool isInViewport = viewportPoint.z > 0 && viewportPoint.x > 0 && viewportPoint.x < 1 && viewportPoint.y > 0 && viewportPoint.y < 1;
+
+                infoplate.IsOnRange = isInViewport;
+            } else {
+                infoplate.IsOnRange = false;
             }
         }
     }
