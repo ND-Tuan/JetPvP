@@ -54,8 +54,10 @@ public class Missile : NetworkBehaviour, IProjectile
 			_isDestroyed = false;
 			_rigidbody.Rigidbody.isKinematic = false;
 			_hitEffect = null;
+			rotationSpeed = 5f;
 
 			_flyEffect.Play();
+			GetComponentInChildren<AudioSource>().Play();
 
 			//bỏ qua va chạm với người bắn
 			Physics.IgnoreCollision(_collider, player.GetComponent<Collider>(), true);
@@ -79,6 +81,9 @@ public class Missile : NetworkBehaviour, IProjectile
 			ScanForPlayers();
 
 			if(target != null && !ChaseDelay.IsCoolingDown){
+
+				if(Vector3.Distance(transform.position, target) < 2) rotationSpeed = 60;
+
 				Vector3 direction = target - transform.position;
 				direction.Normalize();
 				Quaternion lookRotation = Quaternion.LookRotation(direction);
@@ -178,6 +183,7 @@ public class Missile : NetworkBehaviour, IProjectile
 			if (_visualsRoot != null)
 			{
 				_visualsRoot.SetActive(false);
+				
 			}
 
             ApplyAoeDamage();

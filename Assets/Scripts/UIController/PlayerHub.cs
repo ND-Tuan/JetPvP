@@ -21,6 +21,7 @@ public class PlayerHub : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _ReadyStateText;
     [SerializeField] private GameObject ReadyMenu;
     [SerializeField] private GameObject HUBPanel;
+    [SerializeField] private GameObject CautionPanel;
     [SerializeField] private GameObject DeathPanel;
     [SerializeField] private TextMeshProUGUI CooldownText;
     [SerializeField] private TextMeshProUGUI BlueScoreText;
@@ -119,6 +120,10 @@ public class PlayerHub : MonoBehaviour
         
         _ReadyStateText.text = "";
         HUBPanel.SetActive(true);
+    }
+
+    public void SetCaution(bool active){
+        CautionPanel.SetActive(active);
     }
 
     public void SetStatusDisplay(bool IsAlive){

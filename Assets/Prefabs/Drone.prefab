@@ -870,7 +870,7 @@ MonoBehaviour:
   _cooldown: 0.1
   _particle: {fileID: 2671964713289263905}
   _fireTransform: {fileID: 2018261376946880620}
-  _fireClip: {fileID: 8300000, guid: 06938de19ec5b9b47b675fe95d59e821, type: 3}
+  _fireClip: {fileID: 8300000, guid: d0e301e13a7519d49bcba63399bf1a77, type: 3}
   _fireSoundSourcesRoot: {fileID: 1388325162929210038}
   _dummyProjectilePrefab: {fileID: 3907097695794398208, guid: 81e27aa7378152c4ea323e55edb589f1,
     type: 3}

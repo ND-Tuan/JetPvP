@@ -6,6 +6,7 @@ using Fusion.Addons.SimpleKCC;
 using UnityEngine.Rendering;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Unity.VisualScripting;
 
 public sealed class Player : NetworkBehaviour
 {
@@ -74,6 +75,8 @@ public sealed class Player : NetworkBehaviour
     [Networked, HideInInspector, Capacity(24), OnChangedRender(nameof(OnNicknameChanged))]
 	public string Nickname { get; set;}
 
+    private PlayerSoundFx _soundFx;
+
     public override void Spawned()
     {
         //GameManager.Instance.Players.Add(Object.StateAuthority, this);
@@ -85,8 +88,10 @@ public sealed class Player : NetworkBehaviour
         Wheel.SetActive(true);
 
         _animator = GetComponent<Animator>();
+        _soundFx = GetComponentInChildren<PlayerSoundFx>();
        
         _mainCamera = Camera.main.gameObject;
+        _mainCamera.GetComponent<RenderFeatureToggler>().ActivateRenderFeatures(0,false);
         
         Nickname = PlayerPrefs.GetString("PlayerName");
         OnNicknameChanged();
@@ -129,7 +134,7 @@ public sealed class Player : NetworkBehaviour
 		float smoothZTiltAngle = Mathf.SmoothDampAngle( _Model.localRotation.eulerAngles.z, -currentZTiltAngle, ref _zRotationVelocity, RotationSmoothTime);
         float smoothXTiltAngle = Mathf.SmoothDampAngle( _Model.localRotation.eulerAngles.x, currentXTiltAngle, ref _xRotationVelocity, RotationSmoothTime);
        
-        _Model.localRotation = Quaternion.Euler(smoothXTiltAngle, 0, smoothZTiltAngle); 
+        _Model.localRotation = Quaternion.Euler(smoothXTiltAngle, 0, smoothZTiltAngle);
 
         //Render vị trí CameraHandle
         if(PlayerInput.CurrentInput.SpeedUpEffect && _currentEnergy > 0){
@@ -137,11 +142,15 @@ public sealed class Player : NetworkBehaviour
             Vector3 targetPosition = CameraHandle.transform.localPosition;
             targetPosition.y = Mathf.Lerp(CameraHandle.transform.localPosition.y, 3f, Runner.DeltaTime * 10);
             CameraHandle.transform.localPosition = targetPosition + GetCameraShakeOffset();
+
+            CameraHandle.localRotation = _Model.localRotation;
         } else {
             // Giữ nguyên vị trí camera, đặt về vị trí mặc định
             Vector3 targetPosition = new(0,CameraHandle.transform.localPosition.y,-25);
             targetPosition.y = Mathf.Lerp(CameraHandle.transform.localPosition.y, 5, Runner.DeltaTime * 10);
             CameraHandle.transform.localPosition = targetPosition;
+
+            CameraHandle.localRotation = Quaternion.Lerp(CameraHandle.localRotation, Quaternion.Euler(0,0,0), Time.deltaTime);
         }
 	}
 
@@ -202,11 +211,16 @@ public sealed class Player : NetworkBehaviour
         KCC.SetLookRotation(nextRotation.eulerAngles);
 
         //Tính hướng di chuyển
-        var moveDirection = nextRotation * new Vector3(input.MoveDirection.x, input.HightValue* 0.4f, input.MoveDirection.y);
+        var moveDirection = nextRotation * new Vector3(input.MoveDirection.x, input.HightValue* 0.6f, input.MoveDirection.y);
+
+        //Cảnh báo va chạm
+        _soundFx.PlayCollisionWarning(CheckCollison(moveDirection, 20));
+        
 
         //Kiểm tra va chạm
-        if(CheckCollisonWithTerrian(moveDirection)){
+        if(CheckCollison(moveDirection, 1)){
             moveDirection = Vector3.zero;
+            RPC_TakeDamage(5);
         }
 
         //tránh mất tốc đột ngột nếu có hiện tượng lag
@@ -256,7 +270,7 @@ public sealed class Player : NetworkBehaviour
         }
 
         if (input.IsRotateY){
-            targetXTiltAngle = -18*Mathf.Sign(Input.GetAxisRaw("Vertical"));
+            targetXTiltAngle = -30*Mathf.Sign(Input.GetAxisRaw("Vertical"));
         }
         
         // Nghiêng máy bay dần dần về góc nghiêng mục tiêu
@@ -264,10 +278,9 @@ public sealed class Player : NetworkBehaviour
         currentXTiltAngle = Mathf.Lerp(currentXTiltAngle, targetXTiltAngle, Runner.DeltaTime*1);
     }
 
-    //Kiểm tra va chạm (chưa fix được bug collider của KCC không hoạt động T_T, dùng tạm )
-    private bool CheckCollisonWithTerrian(Vector3 diraction)
-    {
-        if(Physics.Raycast(transform.position, diraction, out _hit, 1, _MapLayer)){
+    //Cảnh báo va chạm
+    private bool CheckCollison(Vector3 diraction, float distance) {
+        if(Physics.Raycast(transform.position, diraction, out _hit, distance, _MapLayer)){
             return true;
         }
         return false;
@@ -284,12 +297,22 @@ public sealed class Player : NetworkBehaviour
             _mainCamera.GetComponent<RenderFeatureToggler>().ActivateRenderFeatures(0,true);
             _mainCamera.GetComponent<Camera>().fieldOfView = Mathf.Lerp(_mainCamera.GetComponent<Camera>().fieldOfView, 85, Time.deltaTime * 10);
             GetComponentInChildren<Volume>().enabled = true;
+
+            //Âm thanh
+            _soundFx.JetBootsUp(true);
+
+            
            
         } else {
             //bỏ hiệu ứng
             _mainCamera.GetComponent<RenderFeatureToggler>().ActivateRenderFeatures(0,false);
             _mainCamera.GetComponent<Camera>().fieldOfView = Mathf.Lerp(_mainCamera.GetComponent<Camera>().fieldOfView, 65, Time.deltaTime * 10);
             GetComponentInChildren<Volume>().enabled = false;
+
+            //Âm thanh
+            _soundFx.JetBootsUp(false);
+
+            
         }
     }
 
@@ -329,6 +352,7 @@ public sealed class Player : NetworkBehaviour
     private void OnVisualToggle()
     {
         _Model.gameObject.SetActive(VisualToggle);
+        _soundFx.gameObject.SetActive(VisualToggle);
 
         if(!Object.HasStateAuthority)
             infoplate.gameObject.SetActive(VisualToggle);
@@ -379,6 +403,7 @@ public sealed class Player : NetworkBehaviour
 
             case PlayerState.Death:
                 VisualToggle = false;
+                SpeepUpEffect(false);
                 if(Object.HasStateAuthority)
                     PlayerHub.Instance.SetStatusDisplay(false);
 

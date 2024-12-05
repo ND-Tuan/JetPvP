@@ -85,7 +85,7 @@ namespace Multiplayer
 				return lookRotation;
 
 			} else {
-				lookRotation.x = Mathf.Clamp(lookRotation.x, -30f, 70f);
+				lookRotation.x = Mathf.Clamp(lookRotation.x, -30f, 50f);
 				return lookRotation;
 			}
 		}
