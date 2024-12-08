@@ -74,7 +74,7 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 			Players.Add(LocalPlayer.StateAuthority, _player);
 			PlayerHub.Instance.gameObject.SetActive(true);
 			
-			PlayerHub.Instance.SetRoomName(Runner.SessionInfo.Name);
+			PlayerHub.Instance.SetRoomName(Runner.SessionInfo.Name.ToUpper());
 		}
 
 		public override void FixedUpdateNetwork()

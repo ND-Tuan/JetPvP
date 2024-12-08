@@ -100,7 +100,7 @@ namespace Starter
 
 		public void JoinGame()
 		{
-			StartGame(RoomText.text);
+			StartGame(RoomText.text.ToUpper());
 		}
 
 		public void CreateGame()
