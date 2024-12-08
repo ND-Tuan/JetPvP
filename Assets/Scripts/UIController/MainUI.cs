@@ -19,6 +19,7 @@ public class MainUI : MonoBehaviour
     }
     
     public void Play(){
+        Cam.GetComponent<RenderFeatureToggler>().ActivateRenderFeatures(0,false);
         SceneManager.LoadScene(1);
     }
 

@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 199322389306935664}
   - component: {fileID: 3720729794178000109}
   - component: {fileID: 7066630827356753284}
-  - component: {fileID: 6401146324693685728}
   m_Layer: 10
   m_Name: pfx_exp_Minigun
   m_TagString: Untagged
@@ -38,6 +37,7 @@ Transform:
   - {fileID: 3414356606672026691}
   - {fileID: 3422155701773966961}
   - {fileID: 3422118070842047639}
+  - {fileID: 5819247276345199162}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!198 &198853443776464728
@@ -4936,29 +4936,61 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DestroyTime: 1
---- !u!82 &6401146324693685728
+--- !u!1 &3145697645679467343
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 5819247276345199162}
+  - component: {fileID: 9116407664872746985}
+  m_Layer: 10
+  m_Name: FX
+  m_TagString: FXSoundSource
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &5819247276345199162
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3145697645679467343}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4470552469716954}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!82 &9116407664872746985
 AudioSource:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1704093815938746}
+  m_GameObject: {fileID: 3145697645679467343}
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 4144635511980101256, guid: 646158c37e947814bb34d6c657901aa6,
     type: 2}
   m_audioClip: {fileID: 8300000, guid: b75471adc0411294e865b1fa47e76949, type: 3}
   m_PlayOnAwake: 1
-  m_Volume: 0.489
+  m_Volume: 1
   m_Pitch: 1
   Loop: 0
   Mute: 0
   Spatialize: 0
   SpatializePostEffects: 0
   Priority: 128
-  DopplerLevel: 0.41
+  DopplerLevel: 1
   MinDistance: 1
-  MaxDistance: 10
+  MaxDistance: 500
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0
@@ -4993,7 +5025,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 0.7
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -5008,7 +5040,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1
+      value: 0
       inSlope: 0
       outSlope: 0
       tangentMode: 0

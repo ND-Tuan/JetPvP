@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using Fusion;
 using Multiplayer;
 using ObserverPattern;
@@ -19,6 +20,7 @@ public class PlayerHub : MonoBehaviour
     [SerializeField] private Slider _MissileBar;
     [SerializeField] private Image _MissileBarFill;
     [SerializeField] private TextMeshProUGUI _ReadyStateText;
+    [SerializeField] private TextMeshProUGUI _RoomNameText;
     [SerializeField] private GameObject ReadyMenu;
     [SerializeField] private GameObject HUBPanel;
     [SerializeField] private GameObject CautionPanel;
@@ -36,6 +38,9 @@ public class PlayerHub : MonoBehaviour
     private List<GameObject> _HpBarList;
 
     public static PlayerHub Instance;
+
+    private bool isCautionActive = false;
+    private bool isDelayActive = false;
 
     void Awake()
     {   
@@ -94,7 +99,10 @@ public class PlayerHub : MonoBehaviour
         _ReadyStateText.text = text;
         
         DarkPanel.SetActive(needDark);
-        
+    }
+
+    public void SetRoomName(string name){
+        _RoomNameText.text = "Room name: " + name;
     }
 
     public void SetScore(Team team, int score){
@@ -122,8 +130,29 @@ public class PlayerHub : MonoBehaviour
         HUBPanel.SetActive(true);
     }
 
-    public void SetCaution(bool active){
-        CautionPanel.SetActive(active);
+    public async void SetCaution(bool active)
+    {
+        if (active)
+        {
+            isCautionActive = true;
+            CautionPanel.SetActive(true);
+            SoundManager.Instance.PlayCollisionWarning(true);
+        }
+        else
+        {
+            if (isCautionActive && !isDelayActive)
+            {
+                isDelayActive = true;
+                await Task.Delay(500);
+                if (!isCautionActive)
+                {
+                    CautionPanel.SetActive(false);
+                    SoundManager.Instance.PlayCollisionWarning(false);
+                }
+                isDelayActive = false;
+            }
+            isCautionActive = false;
+        }
     }
 
     public void SetStatusDisplay(bool IsAlive){

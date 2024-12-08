@@ -74,8 +74,7 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 			Players.Add(LocalPlayer.StateAuthority, _player);
 			PlayerHub.Instance.gameObject.SetActive(true);
 			
-
-			//PlayerHub.Instance.OnDiplayHp(Players);
+			PlayerHub.Instance.SetRoomName(Runner.SessionInfo.Name);
 		}
 
 		public override void FixedUpdateNetwork()
@@ -135,6 +134,8 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 			PlayerHub.Instance.SetReadyText("Take off!!", Color.green, false);
 
 			_Hangar.GetComponent<Animator>().Play("TakeOff");
+			SoundManager.Instance.PlayTakeOff();
+
 			await Task.Delay(800);
 
 			PlayerHub.Instance.SetFlash(true);

@@ -9,6 +9,7 @@ TagManager:
   - RedFlag
   - PlayerHUB
   - BlueFlag
+  - FXSoundSource
   layers:
   - Default
   - TransparentFX

@@ -133,7 +133,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f53db7a7da0eee14780fa79447033640, type: 3}
   m_Name: CustomRenderPassFeature
   m_EditorClassIdentifier: 
-  m_Active: 1
+  m_Active: 0
   settings:
     material: {fileID: 2100000, guid: f6a4f606e013e9841a706f3d8cbc168c, type: 2}
     renderPassEvent: 500

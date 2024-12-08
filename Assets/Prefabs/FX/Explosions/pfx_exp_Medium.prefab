@@ -13,7 +13,6 @@ GameObject:
   - component: {fileID: 199666097559810272}
   - component: {fileID: 8808586560556272550}
   - component: {fileID: 8892872641311429362}
-  - component: {fileID: 2467841719022568445}
   m_Layer: 10
   m_Name: pfx_exp_Medium
   m_TagString: Untagged
@@ -43,6 +42,7 @@ Transform:
   - {fileID: 6528793885520754009}
   - {fileID: 6528793885520754039}
   - {fileID: 6528793885520753945}
+  - {fileID: 6709687270181155439}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!198 &198016111470434822
@@ -4941,13 +4941,45 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   DestroyTime: 2
---- !u!82 &2467841719022568445
+--- !u!1 &4859738159294514391
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 6709687270181155439}
+  - component: {fileID: 5866357834377926249}
+  m_Layer: 10
+  m_Name: FX
+  m_TagString: FXSoundSource
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &6709687270181155439
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4859738159294514391}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 4280770983480542}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!82 &5866357834377926249
 AudioSource:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1647817060853758}
+  m_GameObject: {fileID: 4859738159294514391}
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 4144635511980101256, guid: 646158c37e947814bb34d6c657901aa6,
@@ -4963,7 +4995,7 @@ AudioSource:
   Priority: 128
   DopplerLevel: 1
   MinDistance: 1
-  MaxDistance: 40
+  MaxDistance: 500
   Pan2D: 0
   rolloffMode: 0
   BypassEffects: 0
@@ -4998,7 +5030,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 0.7
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -5013,7 +5045,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1
+      value: 0
       inSlope: 0
       outSlope: 0
       tangentMode: 0

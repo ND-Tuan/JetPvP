@@ -4,6 +4,9 @@ using Fusion;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
+using System;
+using System.Text;
 
 namespace Starter
 {
@@ -16,29 +19,43 @@ namespace Starter
 		[Tooltip("Specifies which game mode player should join - e.g. Platformer, ThirdPersonCharacter")]
 		public string GameModeIdentifier;
 		public NetworkRunner RunnerPrefab;
-		public int MaxPlayerCount = 8;
+		private int[] MaxCountSelection = {2, 4, 6, 8};
+		private int MaxPlayerCount = 8;
 
 		[Header("Debug")]
 		[Tooltip("For debug purposes it is possible to force single-player game (starts faster)")]
 		public bool ForceSinglePlayer;
 
 		[Header("UI Setup")]
-		public GameObject BackGround;
+		[SerializeField] private GameObject[] FuctionPanels;
+		[SerializeField] private Image[] FuctionPanelChangeButtons;
+
 		public CanvasGroup PanelGroup;
+
 		public TMP_InputField RoomText;
 		public TMP_InputField NicknameText;
 		public TextMeshProUGUI StatusText;
+		public TextMeshProUGUI MaxPlayerCountText;
+		private bool _isPrivate;
 		public GameObject StartGroup;
 		public GameObject DisconnectGroup;
 
+		[Header("Settings")]
+		[SerializeField] private Slider _volumeSoundSlider;
+		[SerializeField] private Slider _volumeMusicSlider;
+
 		private NetworkRunner _runnerInstance;
 		private static string _shutdownStatus;
+		[SerializeField] private GameObject _jetFake;
 
-		public async void StartGame()
+		private static readonly System.Random _random = new System.Random();
+
+		
+
+		public async void StartGame(string roomName)
 		{
 			await Disconnect();
-
-			PlayerPrefs.SetString("PlayerName", NicknameText.text);
+			
 
 			_runnerInstance = Instantiate(RunnerPrefab);
 
@@ -52,7 +69,7 @@ namespace Starter
 			var startArguments = new StartGameArgs()
 			{
 				GameMode = Application.isEditor && ForceSinglePlayer ? GameMode.Single : GameMode.Shared,
-				SessionName = RoomText.text,
+				SessionName = roomName,
 				PlayerCount = MaxPlayerCount,
 				// We need to specify a session property for matchmaking to decide where the player wants to join.
 				// Otherwise players from Platformer scene could connect to ThirdPersonCharacter game etc.
@@ -68,8 +85,11 @@ namespace Starter
 			if (startTask.Result.Ok)
 			{
 				StatusText.text = "";
+				RoomText.text = roomName;
+				SwitchPanel(2);
+				FuctionPanelChangeButtons[1].gameObject.SetActive(false);
+				_jetFake.SetActive(false);
 				PanelGroup.gameObject.SetActive(false);
-				BackGround.SetActive(false);
 				
 			}
 			else
@@ -77,6 +97,79 @@ namespace Starter
 				StatusText.text = $"Connection Failed: {startTask.Result.ShutdownReason}";
 			}
 		}
+
+		public void JoinGame()
+		{
+			StartGame(RoomText.text);
+		}
+
+		public void CreateGame()
+		{
+			StartGame(GenerateRoomName());
+			_runnerInstance.SessionInfo.IsVisible = !_isPrivate;
+		}
+
+		public void SetPrivate(bool isPrivate)
+		{
+			_isPrivate = isPrivate;
+		}
+
+		private static string GenerateRoomName()
+		{
+			const string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+			StringBuilder result = new StringBuilder(6);
+			for (int i = 0; i < 6; i++)
+			{
+				result.Append(chars[_random.Next(chars.Length)]);
+			}
+			return result.ToString();
+		}
+
+		public void SetMaxPlayerCount(bool isNext)
+		{
+			int index = Array.IndexOf(MaxCountSelection, MaxPlayerCount);
+			index += isNext ? 1 : -1;
+			if (index < 0)
+			{
+				index = MaxCountSelection.Length - 1;
+			}
+			else if (index >= MaxCountSelection.Length)
+			{
+				index = 0;
+			}
+			MaxPlayerCount = MaxCountSelection[index];
+			MaxPlayerCountText.text = MaxPlayerCount.ToString();
+		}
+
+
+		//===========================================
+		//======Panel switch=========================
+		public void SwitchPanel(int panel)
+		{
+			Color MilkWhite = new Color(254, 253, 245);
+			for (int i = 0; i < FuctionPanels.Length; i++)
+			{
+				FuctionPanels[i].SetActive(i == panel);
+				FuctionPanelChangeButtons[i].color = i == panel ? MilkWhite : Color.gray;
+			}
+
+			PlayerPrefs.SetString("PlayerName", NicknameText.text);
+		}
+
+		//===========================================
+		//======Sound settings=======================
+		public void SetMute(bool isMute)
+		{
+			SoundManager.Instance.SetMute(isMute);
+		}
+
+		public void SetVolume()
+		{
+			SoundManager.Instance.SetFXVolume(_volumeSoundSlider.value);
+			SoundManager.Instance.SetMusicVolume(_volumeMusicSlider.value);
+		}
+		//===========================================
+		//===========================================
 
 		public async void DisconnectClicked()
 		{
@@ -101,6 +194,11 @@ namespace Starter
 				Cursor.lockState = CursorLockMode.Locked;
 				Cursor.visible = false;
 			}
+
+			if(GameManager.Instance == null) return;
+			if(GameManager.Instance.State != GameState.Playing)
+				Cursor.lockState = CursorLockMode.None;
+				Cursor.visible = true;
 		}
 
 		private void OnEnable()
@@ -108,7 +206,7 @@ namespace Starter
 			var nickname = PlayerPrefs.GetString("PlayerName");
 			if (string.IsNullOrEmpty(nickname))
 			{
-				nickname = "Player" + Random.Range(10000, 100000);
+				nickname = "Player" + UnityEngine.Random.Range(10000, 100000);
 			}
 
 			NicknameText.text = nickname;
@@ -152,6 +250,8 @@ namespace Starter
 
 			await _runnerInstance.Shutdown();
 			_runnerInstance = null;
+			_jetFake.SetActive(true);
+			FuctionPanelChangeButtons[1].gameObject.SetActive(true);
 
 			// Reset of scene network objects is needed, reload the whole scene
 			SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
@@ -168,5 +268,7 @@ namespace Starter
 			// Reset of scene network objects is needed, reload the whole scene
 			SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
 		}
+
+		
 	}
 }

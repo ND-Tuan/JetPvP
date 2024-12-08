@@ -68,14 +68,16 @@ public sealed class Player : NetworkBehaviour
     [SerializeField] private NetworkObject DeathEffect;
     [SerializeField] private GameObject[] TeleportIn;
     [SerializeField] private GameObject Wheel;
+
+    [Header("Sound")]
+    [SerializeField] private GameObject SoundRoot;
+    private AudioSource[] Sources;
     
     private Vector3 _hitPosition;
     private Vector3 _hitNormal;
 
     [Networked, HideInInspector, Capacity(24), OnChangedRender(nameof(OnNicknameChanged))]
 	public string Nickname { get; set;}
-
-    private PlayerSoundFx _soundFx;
 
     public override void Spawned()
     {
@@ -88,7 +90,7 @@ public sealed class Player : NetworkBehaviour
         Wheel.SetActive(true);
 
         _animator = GetComponent<Animator>();
-        _soundFx = GetComponentInChildren<PlayerSoundFx>();
+        Sources = SoundRoot.GetComponentsInChildren<AudioSource>();
        
         _mainCamera = Camera.main.gameObject;
         _mainCamera.GetComponent<RenderFeatureToggler>().ActivateRenderFeatures(0,false);
@@ -157,6 +159,7 @@ public sealed class Player : NetworkBehaviour
 	private void LateUpdate()
 	{
         if (HasStateAuthority == false) return;
+
         // Xử lý cam
         CameraPivot.rotation = Quaternion.Euler(PlayerInput.CurrentInput.LookRotation);
 
@@ -214,9 +217,7 @@ public sealed class Player : NetworkBehaviour
         var moveDirection = nextRotation * new Vector3(input.MoveDirection.x, input.HightValue* 0.6f, input.MoveDirection.y);
 
         //Cảnh báo va chạm
-        _soundFx.PlayCollisionWarning(CheckCollison(moveDirection, 20));
-        
-
+        PlayerHub.Instance.SetCaution(CheckCollison(moveDirection, 20));
         //Kiểm tra va chạm
         if(CheckCollison(moveDirection, 1)){
             moveDirection = Vector3.zero;
@@ -299,7 +300,7 @@ public sealed class Player : NetworkBehaviour
             GetComponentInChildren<Volume>().enabled = true;
 
             //Âm thanh
-            _soundFx.JetBootsUp(true);
+            PlayEngineFX(true);
 
             
            
@@ -310,7 +311,7 @@ public sealed class Player : NetworkBehaviour
             GetComponentInChildren<Volume>().enabled = false;
 
             //Âm thanh
-            _soundFx.JetBootsUp(false);
+            PlayEngineFX(false);
 
             
         }
@@ -352,7 +353,7 @@ public sealed class Player : NetworkBehaviour
     private void OnVisualToggle()
     {
         _Model.gameObject.SetActive(VisualToggle);
-        _soundFx.gameObject.SetActive(VisualToggle);
+        SoundRoot.gameObject.SetActive(VisualToggle);
 
         if(!Object.HasStateAuthority)
             infoplate.gameObject.SetActive(VisualToggle);
@@ -360,6 +361,13 @@ public sealed class Player : NetworkBehaviour
         foreach(WeaponBase attacker in GetComponent<DroneManager>()._attackers){
             attacker.transform.parent.gameObject.SetActive(VisualToggle);
         }
+    }
+
+    //==================================================================
+    //=============Xử lý âm thanh=======================================
+    private void PlayEngineFX (bool isBootsUp){
+        Sources[0].enabled = !isBootsUp;
+        Sources[1].enabled = isBootsUp;
     }
 
     //==================================================================
