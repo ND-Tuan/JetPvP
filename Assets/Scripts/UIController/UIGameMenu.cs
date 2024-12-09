@@ -7,6 +7,7 @@ using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System;
 using System.Text;
+using UnityEngine.SocialPlatforms.Impl;
 
 namespace Starter
 {
@@ -34,10 +35,11 @@ namespace Starter
 
 		public TMP_InputField RoomText;
 		public TMP_InputField NicknameText;
+		public TMP_InputField MaxScoreText;
 		public TextMeshProUGUI StatusText;
 		public TextMeshProUGUI MaxPlayerCountText;
 		private bool _isPrivate;
-		public GameObject StartGroup;
+		public GameObject[] StartGroup;
 		public GameObject DisconnectGroup;
 
 		[Header("Settings")]
@@ -49,11 +51,13 @@ namespace Starter
 		[SerializeField] private GameObject _jetFake;
 
 		private static readonly System.Random _random = new System.Random();
+		private bool ScoreAvailable = true;
 
 		
 
 		public async void StartGame(string roomName)
 		{
+			
 			await Disconnect();
 			
 
@@ -90,7 +94,7 @@ namespace Starter
 				FuctionPanelChangeButtons[1].gameObject.SetActive(false);
 				_jetFake.SetActive(false);
 				PanelGroup.gameObject.SetActive(false);
-				
+
 			}
 			else
 			{
@@ -105,8 +109,11 @@ namespace Starter
 
 		public void CreateGame()
 		{
+			if(ScoreAvailable == false) return;
 			StartGame(GenerateRoomName());
 			_runnerInstance.SessionInfo.IsVisible = !_isPrivate;
+			
+			GameManager.Instance.ScoreToWin = int.Parse(MaxScoreText.text);
 		}
 
 		public void SetPrivate(bool isPrivate)
@@ -141,7 +148,26 @@ namespace Starter
 			MaxPlayerCountText.text = MaxPlayerCount.ToString();
 		}
 
+		public void CheckMaxScore()
+		{
+			string score = MaxScoreText.text;
+			if (string.IsNullOrEmpty(score))
+			{
+				StatusText.text = "Score cannot be empty!";
+				ScoreAvailable = false;
+				return;
+			}
 
+			if(!int.TryParse(score, out int a) || a <= 0)
+			{
+				StatusText.text = "Score must be greater than 0!";
+				ScoreAvailable = false;
+				return;
+			}
+			
+			StatusText.text = "";
+			ScoreAvailable = true;
+		}
 		//===========================================
 		//======Panel switch=========================
 		public void SwitchPanel(int panel)
@@ -152,6 +178,8 @@ namespace Starter
 				FuctionPanels[i].SetActive(i == panel);
 				FuctionPanelChangeButtons[i].color = i == panel ? MilkWhite : Color.gray;
 			}
+
+			
 
 			PlayerPrefs.SetString("PlayerName", NicknameText.text);
 		}
@@ -210,6 +238,7 @@ namespace Starter
 			}
 
 			NicknameText.text = nickname;
+			MaxScoreText.text = GameManager.Instance.ScoreToWin.ToString();
 
 			// Try to load previous shutdown status
 			StatusText.text = _shutdownStatus != null ? _shutdownStatus : string.Empty;
@@ -226,7 +255,10 @@ namespace Starter
 
 			if (PanelGroup.gameObject.activeSelf)
 			{
-				StartGroup.SetActive(_runnerInstance == null);
+				foreach( var start in StartGroup){
+					start.SetActive(_runnerInstance == null);
+				}
+
 				DisconnectGroup.SetActive(_runnerInstance != null);
 				RoomText.interactable = _runnerInstance == null;
 				NicknameText.interactable = _runnerInstance == null;
