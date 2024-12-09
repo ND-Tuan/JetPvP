@@ -15,15 +15,18 @@ public class PlayerDetecter : MonoBehaviour
     
     private void Update()
     {
+        if(GameManager.Instance.State != GameState.Playing) return;
         foreach (KeyValuePair<PlayerRef, Player> player in GameManager.Instance.Players)
         {
             if (player.Value == null) continue;
             if (player.Value == GameManager.Instance._player) continue;
+            if (player.Value.State == Player.PlayerState.Death) continue;
 
             float distance = Vector3.Distance(player.Value.transform.position, transform.position);
             UIInfoplate infoplate = player.Value.GetComponentInChildren<UIInfoplate>();
 
-            if (distance <= detectionRange)
+
+            if (distance <= detectionRange && infoplate != null)
             {
                 viewportPoint = Camera.main.WorldToViewportPoint(player.Value.transform.position);   
                 bool isInViewport = viewportPoint.z > 0 && viewportPoint.x > 0 && viewportPoint.x < 1 && viewportPoint.y > 0 && viewportPoint.y < 1;

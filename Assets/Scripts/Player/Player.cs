@@ -219,7 +219,7 @@ public sealed class Player : NetworkBehaviour
         //Cảnh báo va chạm
         PlayerHub.Instance.SetCaution(CheckCollison(moveDirection, 20));
         //Kiểm tra va chạm
-        if(CheckCollison(moveDirection, 1)){
+        if(CheckCollison(moveDirection, 1) && GameManager.Instance.State == GameState.Playing){
             moveDirection = Vector3.zero;
             RPC_TakeDamage(5);
         }
