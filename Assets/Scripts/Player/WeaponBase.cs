@@ -1,8 +1,6 @@
 using UnityEngine;
 using Fusion;
 
-
-	// Common weapon base class for all basic examples
 	public abstract class WeaponBase : NetworkBehaviour
 	{
 		// PUBLIC MEMBERS
@@ -34,17 +32,16 @@ using Fusion;
 
 		protected void PlayFireEffect()
 		{
+			//chạy hiệu ứng bắn
 			_particle.Play();
-			// In multipeer mode fire sounds are played only for visible runner
-			if (Runner.GetVisible() == false)
-				return;
-
+			
+			// tìm nguồn phát nếu chưa cócó
 			if (_fireSoundSources == null)
 			{
 				_fireSoundSources = _fireSoundSourcesRoot.GetComponentsInChildren<AudioSource>();
 			}
 
-			// Find free audio source and play fire sound
+			// Tìm nguồn trống và phát âm thanh bắn
 			for (int i = 0; i < _fireSoundSources.Length; i++)
 			{
 				var source = _fireSoundSources[i];
@@ -57,15 +54,19 @@ using Fusion;
 				return;
 			}
 
-			Debug.LogWarning("No free fire sound source", gameObject);
 		}
 
 		public void SetRotation(Vector3 hitPoint){
+			// Lưu hitpoint
 			this._hitPoint = hitPoint;
+
+			//xoay về hướng hitpoint
 			Vector3 Diraction = hitPoint - transform.position;
 			RPC_Rotation(Diraction);
     	}
 
+
+		//rpc để đồng bộ hướng xoay trên tất cả client
 		[Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     	private void RPC_Rotation(Vector3 Diraction)
     	{

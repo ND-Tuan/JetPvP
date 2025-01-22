@@ -1,0 +1,32 @@
+"filename", "language", "C#", "comment", "blank", "total"
+"e:\Unity Projects\Project\My project\Assets\Scripts\Cooldown.cs", "C#", 17, 0, 7, 24
+"e:\Unity Projects\Project\My project\Assets\Scripts\DestroyAfter.cs", "C#", 19, 3, 6, 28
+"e:\Unity Projects\Project\My project\Assets\Scripts\GameController\GameManager.cs", "C#", 209, 13, 67, 289
+"e:\Unity Projects\Project\My project\Assets\Scripts\GameController\SoundManager.cs", "C#", 76, 0, 20, 96
+"e:\Unity Projects\Project\My project\Assets\Scripts\Object\DroneController.cs", "C#", 14, 0, 7, 21
+"e:\Unity Projects\Project\My project\Assets\Scripts\Object\Flag.cs", "C#", 55, 0, 16, 71
+"e:\Unity Projects\Project\My project\Assets\Scripts\Object\IProjectile.cs", "C#", 7, 0, 2, 9
+"e:\Unity Projects\Project\My project\Assets\Scripts\Object\KeepOriginRotation.cs", "C#", 17, 1, 5, 23
+"e:\Unity Projects\Project\My project\Assets\Scripts\Object\Missile.cs", "C#", 155, 13, 47, 215
+"e:\Unity Projects\Project\My project\Assets\Scripts\Object\PhysicsProjectile.cs", "C#", 89, 13, 30, 132
+"e:\Unity Projects\Project\My project\Assets\Scripts\Observer\DummyFlyingProjectile.cs", "C#", 71, 8, 18, 97
+"e:\Unity Projects\Project\My project\Assets\Scripts\Observer\EvenID.cs", "C#", 6, 0, 4, 10
+"e:\Unity Projects\Project\My project\Assets\Scripts\Observer\Observer.cs", "C#", 35, 0, 8, 43
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\DroneManager.cs", "C#", 75, 4, 15, 94
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\FlagCapturer.cs", "C#", 50, 0, 12, 62
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\MissileLauncher.cs", "C#", 33, 2, 10, 45
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\Player.cs", "C#", 348, 61, 106, 515
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\PlayerDetecter.cs", "C#", 38, 0, 9, 47
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\PlayerInput.cs", "C#", 61, 12, 21, 94
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\WeaponBase.cs", "C#", 49, 7, 20, 76
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\Weapon_Hitscan.cs", "C#", 43, 0, 16, 59
+"e:\Unity Projects\Project\My project\Assets\Scripts\Player\Weapon_NetworkObject.cs", "C#", 32, 4, 8, 44
+"e:\Unity Projects\Project\My project\Assets\Scripts\RenderFeatureToggler.cs", "C#", 15, 0, 4, 19
+"e:\Unity Projects\Project\My project\Assets\Scripts\RotateObject.cs", "C#", 39, 0, 7, 46
+"e:\Unity Projects\Project\My project\Assets\Scripts\UIController\DroneSelectPanel.cs", "C#", 17, 0, 5, 22
+"e:\Unity Projects\Project\My project\Assets\Scripts\UIController\HpBarDisplay.cs", "C#", 30, 0, 11, 41
+"e:\Unity Projects\Project\My project\Assets\Scripts\UIController\MainUI.cs", "C#", 23, 0, 7, 30
+"e:\Unity Projects\Project\My project\Assets\Scripts\UIController\PlayerHub.cs", "C#", 182, 1, 40, 223
+"e:\Unity Projects\Project\My project\Assets\Scripts\UIController\UIGameMenu.cs", "C#", 230, 19, 59, 308
+"e:\Unity Projects\Project\My project\Assets\Scripts\UIController\UIInfoplate.cs", "C#", 42, 3, 13, 58
+"Total", "-", 2077, 164, 600, 2841

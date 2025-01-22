@@ -1559,14 +1559,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8a9358f3a2239c548aa19c682d577ebe, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _cooldown: 0.4
+  _cooldown: 0.7
   _particle: {fileID: 4561333690618688919}
   _fireTransform: {fileID: 5698118750348326042}
   _fireClip: {fileID: 8300000, guid: 06938de19ec5b9b47b675fe95d59e821, type: 3}
   _fireSoundSourcesRoot: {fileID: 1388325162929210038}
   _dummyProjectilePrefab: {fileID: 3907097695794398208, guid: 81e27aa7378152c4ea323e55edb589f1,
     type: 3}
-  _damage: 35
+  _damage: 25
   _layer:
     serializedVersion: 2
     m_Bits: 8

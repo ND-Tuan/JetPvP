@@ -44,6 +44,7 @@ public class DroneManager : NetworkBehaviour
             //Ngắm bắn và xoay về vị trí mục tiêu
             Aim();
             foreach (var attacker in _attackers){
+                
                 attacker.SetRotation(hitPoint);
                 attacker.GetComponentInParent<Animator>().enabled = true;
 

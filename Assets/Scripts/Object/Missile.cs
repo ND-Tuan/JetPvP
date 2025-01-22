@@ -3,6 +3,7 @@ using UnityEngine;
 using Fusion;
 using Fusion.Addons.Physics;
 using Unity.VisualScripting;
+using System.Collections.Generic;
 
 [RequireComponent(typeof(NetworkRigidbody3D))]
 public class Missile : NetworkBehaviour, IProjectile
@@ -23,7 +24,7 @@ public class Missile : NetworkBehaviour, IProjectile
 
 		[Networked] private TickTimer _lifeCooldown { get; set; }
 		[Networked] private NetworkBool _isDestroyed { get; set; }
-		[Networked] private Player _firePlayer{ get; set; }
+		[Networked] public Player _firePlayer{ get; set; }
 
 		private bool _isDestroyedRender;
 
@@ -46,17 +47,9 @@ public class Missile : NetworkBehaviour, IProjectile
 			_rigidbody.Teleport(transform.position, rotation);
 
 			//reset đạn
+			RPC_MissileReset();
 			target = hit;
-			ChaseDelay.StartCooldown();
-			_trailRenderer.Clear();
-			_visualsRoot.SetActive(true);
-			_isDestroyedRender = false;
-			_isDestroyed = false;
-			_rigidbody.Rigidbody.isKinematic = false;
-			_hitEffect = null;
-			rotationSpeed = 5f;
-
-			_flyEffect.Play();
+			
 			GetComponentInChildren<AudioSource>().Play();
 
 			//bỏ qua va chạm với người bắn
@@ -79,6 +72,7 @@ public class Missile : NetworkBehaviour, IProjectile
 			_collider.enabled = _isDestroyed == false;
 
 			ScanForPlayers();
+			ShowForRadar();
 
 			if(target != null && !ChaseDelay.IsCoolingDown){
 
@@ -102,7 +96,6 @@ public class Missile : NetworkBehaviour, IProjectile
 			{
 				ShowDestroyEffect();
 				Runner.Despawn(Object);
-				
 			}
 		}
 
@@ -111,11 +104,27 @@ public class Missile : NetworkBehaviour, IProjectile
 			int numPlayers = Physics.OverlapSphereNonAlloc(transform.position, scanRange, _playersInRange, playerLayer);
 			for (int i = 0; i < numPlayers; i++)
 			{
+				if(_playersInRange[i].GetComponent<Player>().MyTeam == _firePlayer.MyTeam) continue;
+
 				if (_playersInRange[i] != _firePlayer.GetComponent<Collider>())
 				{
 					target = _playersInRange[i].transform.position;
 					break;
 				}
+			}
+		}
+
+		private void ShowForRadar(){
+			foreach (KeyValuePair<PlayerRef, Player> player in GameManager.Instance.Players)
+        	{
+				if (player.Value == null) continue;
+				if (player.Value.State == Player.PlayerState.Death) continue;
+				if (player.Value.MyTeam == _firePlayer.MyTeam) continue;
+
+				float distance = Vector3.Distance(player.Value.transform.position, transform.position);
+
+				player.Value.GetComponent<Radar>().RPC_MissileDetecter(distance <= 80 && _visualsRoot.activeInHierarchy);
+
 			}
 		}
 
@@ -183,9 +192,7 @@ public class Missile : NetworkBehaviour, IProjectile
 			if (_visualsRoot != null)
 			{
 				_visualsRoot.SetActive(false);
-				
 			}
-
             ApplyAoeDamage();
 		}
 
@@ -204,6 +211,26 @@ public class Missile : NetworkBehaviour, IProjectile
                 }
             }
         }
+
+		[Rpc(RpcSources.All, RpcTargets.All)]
+		public void RPC_MissileReset()
+		{
+			ChaseDelay.StartCooldown();
+			_trailRenderer.Clear();
+			_visualsRoot.SetActive(true);
+			_isDestroyedRender = false;
+			_isDestroyed = false;
+			_rigidbody.Rigidbody.isKinematic = false;
+			_hitEffect = null;
+			rotationSpeed = 5f;
+
+			_flyEffect.Play();
+		}
+
+		private void OnDrawGizmosSelected(){
+			Gizmos.color = Color.red;
+			Gizmos.DrawWireSphere(transform.position, scanRange);
+		}
 	}
 
 

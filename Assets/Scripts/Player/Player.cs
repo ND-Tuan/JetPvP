@@ -59,12 +59,13 @@ public sealed class Player : NetworkBehaviour
     private GameObject _mainCamera;
     
     [Header("Visual")]
-    private Animator _animator;
+    [SerializeField] private Material[] materials = new Material[2];
+    [SerializeField] private MeshRenderer DisplayOnMiniMap;
     private PlayerHub _playerHub;
     [Networked] public HpBarDisplay _HpDisplay {get; set;}
     [SerializeField] private UIInfoplate infoplate;
     public Transform _Model;
-	private	Color Blue = new(0,152,255);
+	private	Color Blue = new(0,110,255);
     [SerializeField] private NetworkObject DeathEffect;
     [SerializeField] private GameObject[] TeleportIn;
     [SerializeField] private GameObject Wheel;
@@ -76,30 +77,27 @@ public sealed class Player : NetworkBehaviour
     private Vector3 _hitPosition;
     private Vector3 _hitNormal;
 
-    [Networked, HideInInspector, Capacity(24), OnChangedRender(nameof(OnNicknameChanged))]
-	public string Nickname { get; set;}
+    [Networked] public string Nickname { get; set;}
 
     public override void Spawned()
     {
-        //GameManager.Instance.Players.Add(Object.StateAuthority, this);
-
-        //Runner.SetIsSimulated(Object, true);
         _currentHealth = _MaxHealth;
         _currentEnergy = _MaxEnergy;
 
         Wheel.SetActive(true);
 
-        _animator = GetComponent<Animator>();
         Sources = SoundRoot.GetComponentsInChildren<AudioSource>();
        
         _mainCamera = Camera.main.gameObject;
         _mainCamera.GetComponent<RenderFeatureToggler>().ActivateRenderFeatures(0,false);
         
-        Nickname = PlayerPrefs.GetString("PlayerName");
-        OnNicknameChanged();
+        
         _respawnInSeconds = 0;
 
-        if(!Object.HasStateAuthority){
+        if(Object.HasStateAuthority){
+            RPC_SetNickname(PlayerPrefs.GetString("PlayerName"));
+            
+        } else {
             GetComponentInChildren<Camera>().enabled = false;     
         }
         //ẩn trong màn hình chuẩn bị
@@ -152,7 +150,7 @@ public sealed class Player : NetworkBehaviour
             targetPosition.y = Mathf.Lerp(CameraHandle.transform.localPosition.y, 5, Runner.DeltaTime * 10);
             CameraHandle.transform.localPosition = targetPosition;
 
-            CameraHandle.localRotation = Quaternion.Lerp(CameraHandle.localRotation, Quaternion.Euler(0,0,0), Time.deltaTime);
+            CameraHandle.localRotation = Quaternion.Lerp(CameraHandle.localRotation, Quaternion.Euler(smoothXTiltAngle,0,0), Time.deltaTime);
         }
 	}
 
@@ -167,7 +165,7 @@ public sealed class Player : NetworkBehaviour
         if (!isRegenerating && _currentEnergy < _MaxEnergy && !PlayerInput.CurrentInput.SpeedUpEffect)
         {
             //Bắt đầu hồi năng lượng
-            _currentEnergy += 1;
+            _currentEnergy += 0.75f;
             //Đảm bảo không vượt quá max
             if( _currentEnergy > _MaxEnergy)_currentEnergy = _MaxEnergy;
         }
@@ -189,7 +187,7 @@ public sealed class Player : NetworkBehaviour
 
         //cho phép tăng tốc nếu đủ năng lượng (chỉ bắt đầu hồi khi người chơi nhả nút tăng tốc)
         if(input.SpeedUpEffect && _currentEnergy > 0){
-           _currentEnergy -= 0.25f;
+           _currentEnergy -= 0.2f;
            if(_currentEnergy < 0) _currentEnergy = 0;
            isRegenerating = true;
 
@@ -217,11 +215,11 @@ public sealed class Player : NetworkBehaviour
         var moveDirection = nextRotation * new Vector3(input.MoveDirection.x, input.HightValue* 0.6f, input.MoveDirection.y);
 
         //Cảnh báo va chạm
-        PlayerHub.Instance.SetCaution(CheckCollison(moveDirection, 20));
+        PlayerHub.Instance.SetCollisionCaution(CheckCollison(moveDirection, 20));
         //Kiểm tra va chạm
         if(CheckCollison(moveDirection, 1) && GameManager.Instance.State == GameState.Playing){
             moveDirection = Vector3.zero;
-            RPC_TakeDamage(5);
+            RPC_TakeDamage(15);
         }
 
         //tránh mất tốc đột ngột nếu có hiện tượng lag
@@ -276,7 +274,7 @@ public sealed class Player : NetworkBehaviour
         
         // Nghiêng máy bay dần dần về góc nghiêng mục tiêu
         currentZTiltAngle = Mathf.Lerp(currentZTiltAngle, targetZTiltAngle, Runner.DeltaTime *1);
-        currentXTiltAngle = Mathf.Lerp(currentXTiltAngle, targetXTiltAngle, Runner.DeltaTime*1);
+        currentXTiltAngle = Mathf.Lerp(currentXTiltAngle, targetXTiltAngle, Runner.DeltaTime*10);
     }
 
     //Cảnh báo va chạm
@@ -339,27 +337,20 @@ public sealed class Player : NetworkBehaviour
             PlayerHub.Instance.OnUpdateHpBar(_currentHealth, _MaxHealth);
     }
 
-    //Hiển thị tên người chơi
-    private void OnNicknameChanged()
-    {
-		if (HasStateAuthority){
-            return; // Chỉ hiển thị tên của người chơi khác
-        }
-		infoplate.SetNickname(Nickname);
-       
-	}
+    
 
     //Tắt hiển thị
     private void OnVisualToggle()
     {
-        _Model.gameObject.SetActive(VisualToggle);
-        SoundRoot.gameObject.SetActive(VisualToggle);
+        _Model.gameObject.SetActive(VisualToggle); //tắt mở model
+        SoundRoot.gameObject.SetActive(VisualToggle); //tắt mở âm thanh
+        DisplayOnMiniMap.gameObject.SetActive(VisualToggle); //tắt mở hiển thị trên bản đồ
 
         if(!Object.HasStateAuthority)
-            infoplate.gameObject.SetActive(VisualToggle);
+            infoplate.gameObject.SetActive(VisualToggle); //tắt mở hiển thị thông tin
 
         foreach(WeaponBase attacker in GetComponent<DroneManager>()._attackers){
-            attacker.transform.parent.gameObject.SetActive(VisualToggle);
+            attacker.transform.parent.gameObject.SetActive(VisualToggle); //tắt mở các drone
         }
     }
 
@@ -378,6 +369,10 @@ public sealed class Player : NetworkBehaviour
         if(State == PlayerState.Death) return;
 
         _currentHealth -= damage;
+
+        if(Object.HasStateAuthority)
+            PlayerHub.Instance.SetDmgPanel();
+            
         if(_currentHealth <= 0){
             State = PlayerState.Death;
             //Chết
@@ -463,6 +458,15 @@ public sealed class Player : NetworkBehaviour
 
     }
 
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    //Hiển thị tên người chơi
+    public void RPC_SetNickname(string nickname)
+    {
+        Nickname = nickname;
+        infoplate.SetNickname(nickname);
+    }
+       
+
     // đưa người chơi vào trạng thái sẵn sàng
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_SetReady(bool ReadyOrNot)
@@ -481,6 +485,7 @@ public sealed class Player : NetworkBehaviour
     public void RPC_StartGame(Team team){
         //set team
         MyTeam = team;
+        DisplayOnMiniMap.material = materials[MyTeam == Team.Blue? 0:1];
 
         //Set up chức năng cướp cờ
         GetComponentInChildren<FlagCapturer>().SetCapturer(team);

@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.16788355, g: 0.21073574, b: 0.2899406, a: 1}
+  m_IndirectSpecularColor: {r: 0.26793748, g: 0.4639402, b: 0.61437225, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1996,8 +1996,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 3875535604
-  m_fontColor: {r: 0.95660377, g: 0.97976136, b: 1, a: 0.9019608}
+    rgba: 4294966004
+  m_fontColor: {r: 0.95660377, g: 0.97976136, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -4644,8 +4644,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 3875535604
-  m_fontColor: {r: 0.95660377, g: 0.97976136, b: 1, a: 0.9019608}
+    rgba: 4294966004
+  m_fontColor: {r: 0.95660377, g: 0.97976136, b: 1, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:

@@ -1,0 +1,52 @@
+Date : 2024-12-12 16:56:00
+Directory : e:\Unity Projects\Project\My project\Assets\Scripts
+Total : 22 files,  864 codes, 9 comments, 206 blanks, all 1079 lines
+
+Languages
++----------+------------+------------+------------+------------+------------+
+| language | files      | code       | comment    | blank      | total      |
++----------+------------+------------+------------+------------+------------+
+| C#       |         22 |        864 |          9 |        206 |      1,079 |
++----------+------------+------------+------------+------------+------------+
+
+Directories
++---------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                  | files      | code       | comment    | blank      | total      |
++---------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                     |         22 |        864 |          9 |        206 |      1,079 |
+| . (Files)                                                                             |          1 |          1 |          0 |         -1 |          0 |
+| GameController                                                                        |          2 |        162 |         -1 |         37 |        198 |
+| Object                                                                                |          4 |        200 |         13 |         63 |        276 |
+| Observer                                                                              |          1 |         71 |          8 |         18 |         97 |
+| Player                                                                                |          9 |        179 |        -17 |         31 |        193 |
+| UIController                                                                          |          5 |        251 |          6 |         58 |        315 |
++---------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++---------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| filename                                                                              | language | code       | comment    | blank      | total      |
++---------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+
+| e:\Unity Projects\Project\My project\Assets\Scripts\Cooldown.cs                       | C#       |          1 |          0 |         -1 |          0 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\GameController\GameManager.cs     | C#       |         86 |         -1 |         17 |        102 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\GameController\SoundManager.cs    | C#       |         76 |          0 |         20 |         96 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Object\DroneController.cs         | C#       |         14 |          0 |          7 |         21 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Object\Flag.cs                    | C#       |         31 |          0 |         11 |         42 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Object\Missile.cs                 | C#       |        155 |         13 |         47 |        215 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Object\PhysicsProjectile.cs       | C#       |          0 |          0 |         -2 |         -2 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Observer\DummyFlyingProjectile.cs | C#       |         71 |          8 |         18 |         97 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Player\DroneManager.cs            | C#       |         75 |          4 |         15 |         94 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Player\FlagCapturer.cs            | C#       |         11 |          0 |          3 |         14 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Player\MissileLauncher.cs         | C#       |         33 |          2 |         10 |         45 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Player\Player.cs                  | C#       |         10 |         -2 |        -11 |         -3 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Player\PlayerDetecter.cs          | C#       |          9 |         -5 |          4 |          8 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Player\PlayerInput.cs             | C#       |          7 |          2 |          2 |         11 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Player\WeaponBase.cs              | C#       |          3 |          0 |          1 |          4 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Player\Weapon_Hitscan.cs          | C#       |         43 |          0 |         16 |         59 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\Player\Weapon_NetworkObject.cs    | C#       |        -12 |        -18 |         -9 |        -39 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\UIController\DroneSelectPanel.cs  | C#       |         17 |          0 |          5 |         22 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\UIController\HpBarDisplay.cs      | C#       |         -4 |          0 |         -1 |         -5 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\UIController\MainUI.cs            | C#       |         23 |          0 |          7 |         30 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\UIController\PlayerHub.cs         | C#       |        110 |          0 |         23 |        133 |
+| e:\Unity Projects\Project\My project\Assets\Scripts\UIController\UIGameMenu.cs        | C#       |        105 |          6 |         24 |        135 |
+| Total                                                                                 |          |        864 |          9 |        206 |      1,079 |
++---------------------------------------------------------------------------------------+----------+------------+------------+------------+------------+

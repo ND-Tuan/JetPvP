@@ -23,7 +23,9 @@ public class PlayerHub : MonoBehaviour
     [SerializeField] private TextMeshProUGUI _RoomNameText;
     [SerializeField] private GameObject ReadyMenu;
     [SerializeField] private GameObject HUBPanel;
-    [SerializeField] private GameObject CautionPanel;
+    [SerializeField] private GameObject CollisionCautionPanel;
+    [SerializeField] private GameObject MissileCautionPanel;
+    [SerializeField] private GameObject TakeDmgPanel;
     [SerializeField] private GameObject DeathPanel;
     [SerializeField] private TextMeshProUGUI CooldownText;
     [SerializeField] private TextMeshProUGUI BlueScoreText;
@@ -130,30 +132,65 @@ public class PlayerHub : MonoBehaviour
         HUBPanel.SetActive(true);
     }
 
-    public async void SetCaution(bool active)
+    public async void SetCollisionCaution(bool active)
     {
+        if(MissileCautionPanel.activeInHierarchy) return;
         if (active)
         {
             isCautionActive = true;
-            CautionPanel.SetActive(true);
+            CollisionCautionPanel.SetActive(true);
             SoundManager.Instance.PlayCollisionWarning(true);
+            return;
         }
-        else
+       
+        if (isCautionActive && !isDelayActive)
         {
-            if (isCautionActive && !isDelayActive)
+            isDelayActive = true;
+            await Task.Delay(500);
+            if (!isCautionActive)
             {
-                isDelayActive = true;
-                await Task.Delay(500);
-                if (!isCautionActive)
-                {
-                    CautionPanel.SetActive(false);
-                    SoundManager.Instance.PlayCollisionWarning(false);
-                }
-                isDelayActive = false;
+                CollisionCautionPanel.SetActive(false);
+                SoundManager.Instance.PlayCollisionWarning(false);
             }
-            isCautionActive = false;
+            isDelayActive = false;
         }
+        isCautionActive = false;
     }
+
+    public void SetMissileCaution(bool active){
+        if(active){
+            CollisionCautionPanel.SetActive(false);
+            SoundManager.Instance.PlayCollisionWarning(true);
+
+
+            CancelInvoke(nameof(DeActivateMissileCaution));
+            Invoke(nameof(DeActivateMissileCaution), 3f);
+            
+        } else if (!CollisionCautionPanel.activeInHierarchy) {
+            SoundManager.Instance.PlayCollisionWarning(false);
+        }
+       
+        MissileCautionPanel.SetActive(active);
+    }
+
+    private void DeActivateMissileCaution(){
+        MissileCautionPanel.SetActive(false);
+        SoundManager.Instance.PlayCollisionWarning(false);
+    }
+
+    public void SetDmgPanel()
+    {
+       TakeDmgPanel.SetActive(true);
+        
+        //Hủy invoke trước đó
+        CancelInvoke(nameof(DeactivateDmgPanel));
+        Invoke(nameof(DeactivateDmgPanel), 0.2f);
+    }
+
+    private void DeactivateDmgPanel()
+    {
+        TakeDmgPanel.SetActive(false);
+    } 
 
     public void SetStatusDisplay(bool IsAlive){
         HUBPanel.SetActive(IsAlive);

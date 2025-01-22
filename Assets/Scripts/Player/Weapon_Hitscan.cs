@@ -1,14 +1,10 @@
 ﻿using Fusion;
 using UnityEngine;
 
-	// Using projectile data buffer is the most versatile solution that can scale very well with the project.
-	// In this example we use hitscan projectiles and the added complexity over Example 03 is minimal.
-	// Hitscan projectiles are very easy to implement and are the most efficient. You can trick the player
-	// that the projectile is flying through the air by using dummy flying projectile.
-	// However if kinematic projectiles are needed, the solution needs to be more complex, proceed to Example 05.
+
 	public class Weapon_Hitscan : WeaponBase
 	{
-		// PRIVATE MEMBERS
+	
 		[SerializeField]private NetworkObject _dummyProjectilePrefab;
 		[Networked] private int _fireCount { get; set; }
 		[Networked] private TickTimer _cooldownTimer{ get; set; }
@@ -19,21 +15,27 @@ using UnityEngine;
 		private int _visibleFireCount;
 		
 
-		// WeaponBase INTERFACE
 
 		public override void Fire()
 		{
+			//kiểm tra cooldown
 			if(_cooldownTimer.ExpiredOrNotRunning(Runner)) {
 
 				_hitPosition = HitPoint;
 				_fireCount++;
+
+				//set lại cooldown
 				_cooldownTimer = TickTimer.CreateFromSeconds(Runner, Cooldown);
 
+				//kiểm tra va chạm
 				int _numColliders = Physics.OverlapSphereNonAlloc(HitPoint, 1f, _hitColliders, _layer);
 				if(_numColliders<=0) return;
 
 				Player target = _hitColliders[0].gameObject.GetComponent<Player>();
 				if (target == null) return;
+
+				//ko gây sát thương cho đồng đội
+				if(target.MyTeam == GameManager.Instance._player.MyTeam) return;
 				
 				target.RPC_TakeDamage(_damage);
 			}
@@ -41,19 +43,19 @@ using UnityEngine;
 
 		public override void Spawned()
 		{
+			// Khởi tạo giá trị ban đầu cho biến đếm số lần bắn hiển thị
 			_visibleFireCount = _fireCount;
 		}
 
 		public override void Render()
 		{
+			// Kiểm tra số lần bắn thực tế (tránh mất đồng bộ giữa các client)
 			if (_visibleFireCount < _fireCount)
 			{
+				 // Chạy hiệu ứng bắn
 				PlayFireEffect();
 
-				// Try to spawn dummy flying projectile.
-				// Even though projectile hit was immediately processed in FUN we can spawn
-				// dummy projectile that still travels through air with some speed until the hit position is reached.
-				// That way the immediate hitscan effect is covered by the flying visuals.
+				// tạo và bắn đạn giả để làm hiệu ứng hiển thịthị
 				if (_dummyProjectilePrefab != null)
 				{
 					var projectile = Runner.Spawn(_dummyProjectilePrefab, FireTransform.position, FireTransform.rotation, Object.InputAuthority);

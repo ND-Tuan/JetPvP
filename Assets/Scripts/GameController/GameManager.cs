@@ -18,7 +18,7 @@ public enum GameState
 public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 	{
 		[Networked, OnChangedRender(nameof(GameStateChanged))] public GameState State { get; set; }	= GameState.Waiting;
-		public int ScoreToWin = 3;	
+		public static int ScoreToWin = 3;	
 		public GameObject Map1;
 		public NetworkObject PlayerPrefab;
 		public NetworkObject HpBarPrefab;
@@ -44,9 +44,10 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 		 //Singleton
     	public static GameManager Instance { get; private set; }
 		
+
 		public override void Spawned()
 		{
-			 //triển khai Singleton
+			//triển khai Singleton
         	if (Instance == null){
             	Instance = this;
             	DontDestroyOnLoad(gameObject);
@@ -54,8 +55,7 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
         	} else if (Instance != this){
             	Destroy(gameObject);
         	}
-
-
+			 
 			//trạng thái bắt đầu mặc định
 			State = GameState.Waiting;
 
@@ -95,6 +95,7 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 					}
 				}
 
+				// Nếu tất cả người chơi đã sẵn sàng, chuyển trạng thái trò chơi
 				if (areAllReady)
 				{
 					State = GameState.AllReady;
@@ -102,35 +103,35 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 				}
 			}
 
+			// Kiểm tra nếu bộ đếm thời gian kết thúc trò chơi đã hết
 			if (GameOverTimer.Expired(Runner))
 			{
-			
+				
+				 // Cập nhật điểm số cho đội chiến thắng
 				if(Runner.IsSharedModeMasterClient){
 					if (Winner == Team.Blue ) BlueScore++;
 					if (Winner == Team.Red ) RedScore++;
 				}		
 
-				// Restart the game
+				//đặt lại trò chơi (vòng mới)
 				Winner = default;
 				GameOverTimer = default;
 
+				// Kiểm tra nếu một đội đã đạt điểm số để thắng
 				if (BlueScore >= ScoreToWin || RedScore >= ScoreToWin){
 					return;
 				}
 
-				// Prepare players for next round
+				// Chuẩn bị người chơi cho vòng tiếp theo
 				RPC_RespawnPlayer();
 				
-
-				Cursor.lockState = CursorLockMode.Locked;
-				Cursor.visible = false;
-
-				PlayerHub.Instance.SetReadyText("", Color.green, false);
 			}
 		}
 
+		//Chuyển trạng thái sẵn sàng của người chơi
 		private async void OnAllReady(){
 			
+			//hiệu ứng cất cánh
 			PlayerHub.Instance.SetReadyText("Take off!!", Color.green, false);
 
 			_Hangar.GetComponent<Animator>().Play("TakeOff");
@@ -175,34 +176,44 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 			
     	}
 
+		//Di chuyển người chơi đến vị trí spawn
 		private void TelePlayer(Player player){
+			// Xác định điểm spawn dựa trên đội của người chơi
+			var SpawnPoint = player.MyTeam == Team.Blue?   BlueTeamSpawnPoint : RedTeamSpawnPoint;
 			
-				var SpawnPoint = player.MyTeam == Team.Blue?   BlueTeamSpawnPoint : RedTeamSpawnPoint;
-				
-				Quaternion spawnRotation = Quaternion.LookRotation(SpawnPoint - transform.position);
-				var randomPositionOffset = Random.insideUnitCircle * SpawnRadius;
-				var spawnPosition = SpawnPoint + new Vector3(randomPositionOffset.x, transform.position.y, randomPositionOffset.y);
+			// quay người chơi về hướng spawn
+			Quaternion spawnRotation = Quaternion.LookRotation(SpawnPoint - transform.position);
+			var randomPositionOffset = Random.insideUnitCircle * SpawnRadius;
+			var spawnPosition = SpawnPoint + new Vector3(randomPositionOffset.x, transform.position.y, randomPositionOffset.y);
 
-				player.Teleport(spawnPosition, spawnRotation);
+			//Di chuyển người chơi đến vị trí spawn
+			player.Teleport(spawnPosition, spawnRotation);
 			
 		}
 
+		//Cập nhật danh sách người chơi khi có người chơi mới tham gia
     	public void PlayerJoined(PlayerRef player)
     	{
         	Invoke(nameof(UpdatePlayerList), 1f);
     	}
 
+		//Xóa người chơi khỏi danh sách khi người chơi rời phòng
 		public void PlayerLeft(PlayerRef player)
 		{
 			Players.Remove(player);
 		}
 
+
+		//Cập nhật danh sách người chơi
 		private void  UpdatePlayerList(){
 
+			// Tìm tất cả các đối tượng có tag "Player"
 			PlayerList = GameObject.FindGameObjectsWithTag("Player").ToList();
 
 			foreach(GameObject player in PlayerList){
 				Player playerScript = player.GetComponent<Player>();
+
+				// thêm vào nếu người chơi chưa có trong danh sách
 				if(!Players.ContainsValue(playerScript)){
 					PlayerRef playerRef = player.GetComponent<NetworkObject>().StateAuthority;
 
@@ -210,9 +221,9 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 						Players.Add(playerRef, playerScript);
 				}
 			}
-
 		}
 
+		//Chuyển trạng thái của tất cả người chơi
 		private void ChangePlayersState(Player.PlayerState state)
 		{
 			foreach (KeyValuePair<PlayerRef, Player> player in Players)
@@ -220,7 +231,8 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 				player.Value.State = state;
 			}
 		}
-
+		
+		//Cập nhật điểm số lên ui
 		private void OnScoreChange(){
 			PlayerHub.Instance.SetScore(Team.Blue, BlueScore);
 			PlayerHub.Instance.SetScore(Team.Red, RedScore);
@@ -230,28 +242,35 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 			}
 		}
 
+		//Cập nhật trạng thái game
 		private void GameStateChanged()
     	{
 			
 			switch(State){
+				//Hiển thị phòng chờ
 				case GameState.Waiting:
 					_Hangar.SetActive(true);
 					break;
 
+				//Hiển thị trạng thái sẵn sàng, chuẩn bị người chơi
 				case GameState.AllReady:
 					OnAllReady();
 					break;
 
+				//đếm ngược vào game
 				case GameState.Cooldown:
 					_Hangar.SetActive(false);
 					TelePlayer(_player);
 					StartCoroutine(StartCooldown());
 					break;
-
+				
+				//Bắt đầu game
 				case GameState.Playing:
 					ChangePlayersState(Player.PlayerState.Active);
 					StopAllCoroutines();
 					break;
+
+				//Hiển thị kết quả game
 				case GameState.Win:
 					float ratio = (float)(BlueScore - RedScore) / ScoreToWin;
 					ratio = (float)System.Math.Round(ratio, 2);
@@ -260,18 +279,22 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 			}
     	}
 
+		//Bắt đầu đếm ngược
 		private IEnumerator StartCooldown()
 		{	
 			int time = 3;
+			//cập nhật ui
 			while(time > 0){
 				PlayerHub.Instance.SetReadyText("Game will start in " + time + "s", Color.white, false);
 
+				//đồng bộ thời gian đếm ngược
 				if(Runner.IsSharedModeMasterClient)
 					_cooldown = TickTimer.CreateFromSeconds(Runner, 1);
 					
 				yield return new WaitUntil(() => _cooldown.Expired(Runner));
 				time--;
 			}
+
 			PlayerHub.Instance.SetFlash(false);
 			//Hiển thị chuyển trạng thái game
 			PlayerHub.Instance.SetPlaying();
@@ -281,10 +304,14 @@ public sealed class GameManager : NetworkBehaviour, IPlayerJoined, IPlayerLeft
 			}
 		}
 		
+		//Rpc để Respawn người chơi
 		[Rpc(RpcSources.StateAuthority, RpcTargets.All)]
 		private void RPC_RespawnPlayer()
 		{
 			_player.Respawn();
+			PlayerHub.Instance.SetReadyText("", Color.green, false);
+			Cursor.lockState = CursorLockMode.Locked;
+			Cursor.visible = false;
 		}
 
 }

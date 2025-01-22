@@ -23,8 +23,6 @@ public class HpBarDisplay : NetworkBehaviour
 
         _HpText.text = (string)data[0];
         _hpFill.color = (Color)data[2];
-
-        if(Object.HasStateAuthority)
         _name.text = (string)data[1];
     }
 
