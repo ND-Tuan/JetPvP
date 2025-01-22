@@ -58,7 +58,8 @@ public class PlayerHub : MonoBehaviour
         _PlayerList = new();
     }
 
-    public void OnUpdateEnergyBar(float value, float maxValue, bool isRegen){
+    // hiển thị thanh năng lượng
+        public void OnUpdateEnergyBar(float value, float maxValue, bool isRegen){
         Color color = _EnergyBarFill.color;
         if(isRegen){
             color.a = 200/255f;
@@ -71,12 +72,14 @@ public class PlayerHub : MonoBehaviour
         _EnergyBar.value = value;
     }
 
+    // hiển thị thanh máu
     public void OnUpdateHpBar(float value, float maxValue){
         if(value <0) value = 0;
         _HpBar.maxValue = maxValue;
         _HpBar.value = value;
     }
 
+    // hiển thị cd missile
     public void OnUpdateMissileBar(float value){
         _MissileBar.value = value;
 
@@ -89,6 +92,7 @@ public class PlayerHub : MonoBehaviour
         }
     }
 
+    //chữ báo trạng thái
     public void Ready(){
         GameManager.Instance._player.RPC_SetReady(true);
         ReadyMenu.SetActive(false);
@@ -96,6 +100,7 @@ public class PlayerHub : MonoBehaviour
             SetReadyText("Waiting for other players...", Color.white, false);
     }
 
+    //
     public void SetReadyText(string text, Color color, bool needDark = false){
         _ReadyStateText.color = color;
         _ReadyStateText.text = text;
@@ -103,9 +108,11 @@ public class PlayerHub : MonoBehaviour
         DarkPanel.SetActive(needDark);
     }
 
+    //tên phòng
     public void SetRoomName(string name){
         _RoomNameText.text = "Room name: " + name;
     }
+
 
     public void SetScore(Team team, int score){
         string text = score.ToString();
@@ -126,27 +133,34 @@ public class PlayerHub : MonoBehaviour
         }
     }
 
+
     public void SetPlaying(){
         
         _ReadyStateText.text = "";
         HUBPanel.SetActive(true);
     }
 
+    //cánh báo va chạm
     public async void SetCollisionCaution(bool active)
-    {
+    {   
+        //bỏ qua nếu cảnh báo đang hiển thị
         if(MissileCautionPanel.activeInHierarchy) return;
         if (active)
         {
+            // Kích hoạt cảnh báo va chạm
             isCautionActive = true;
             CollisionCautionPanel.SetActive(true);
             SoundManager.Instance.PlayCollisionWarning(true);
             return;
         }
-       
+
+        // Nếu cảnh báo đang hoạt động và không có độ trễ, bắt đầu độ trễ
         if (isCautionActive && !isDelayActive)
         {
             isDelayActive = true;
             await Task.Delay(500);
+
+            // Nếu cảnh báo không còn hoạt động sau độ trễ, tắt cảnh báo
             if (!isCautionActive)
             {
                 CollisionCautionPanel.SetActive(false);
@@ -157,6 +171,7 @@ public class PlayerHub : MonoBehaviour
         isCautionActive = false;
     }
 
+    //cánh báo missile
     public void SetMissileCaution(bool active){
         if(active){
             CollisionCautionPanel.SetActive(false);
@@ -178,6 +193,7 @@ public class PlayerHub : MonoBehaviour
         SoundManager.Instance.PlayCollisionWarning(false);
     }
 
+    //hiệu ứng khi nhận sát thương
     public void SetDmgPanel()
     {
        TakeDmgPanel.SetActive(true);
@@ -187,11 +203,13 @@ public class PlayerHub : MonoBehaviour
         Invoke(nameof(DeactivateDmgPanel), 0.2f);
     }
 
+    //tắt hiệu ứng khi nhận sát thương
     private void DeactivateDmgPanel()
     {
         TakeDmgPanel.SetActive(false);
     } 
 
+    //
     public void SetStatusDisplay(bool IsAlive){
         HUBPanel.SetActive(IsAlive);
         DeathPanel.SetActive(!IsAlive);

@@ -55,7 +55,7 @@ using UnityEngine;
 				 // Chạy hiệu ứng bắn
 				PlayFireEffect();
 
-				// tạo và bắn đạn giả để làm hiệu ứng hiển thịthị
+				// tạo và bắn đạn giả để làm hiệu ứng hiển thị
 				if (_dummyProjectilePrefab != null)
 				{
 					var projectile = Runner.Spawn(_dummyProjectilePrefab, FireTransform.position, FireTransform.rotation, Object.InputAuthority);

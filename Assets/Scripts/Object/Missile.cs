@@ -87,6 +87,7 @@ public class Missile : NetworkBehaviour, IProjectile
 			if(_isDestroyed == false)
 				_rigidbody.Rigidbody.velocity = transform.forward * _initialImpulse;
 
+			//raycast kiểm tra va chạm 
 			if(Physics.Raycast(transform.position, transform.forward, out RaycastHit hit, 0.5f, CollisionLayer)){
 				if(hit.collider != _firePlayer.GetComponent<Collider>())
 					ProcessHit();
@@ -225,11 +226,6 @@ public class Missile : NetworkBehaviour, IProjectile
 			rotationSpeed = 5f;
 
 			_flyEffect.Play();
-		}
-
-		private void OnDrawGizmosSelected(){
-			Gizmos.color = Color.red;
-			Gizmos.DrawWireSphere(transform.position, scanRange);
 		}
 	}
 

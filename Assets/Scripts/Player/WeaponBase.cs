@@ -35,7 +35,7 @@ using Fusion;
 			//chạy hiệu ứng bắn
 			_particle.Play();
 			
-			// tìm nguồn phát nếu chưa cócó
+			// tìm nguồn phát nếu chưa có
 			if (_fireSoundSources == null)
 			{
 				_fireSoundSources = _fireSoundSourcesRoot.GetComponentsInChildren<AudioSource>();
